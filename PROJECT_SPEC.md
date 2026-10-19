@@ -50,17 +50,32 @@ This tool uses **published, validated stochastic models** to generate many plaus
 
 **Rule:** Stella supplies and verifies all coefficients from the original papers. No coefficient is hardcoded from memory. Each formula in the code cites its paper and equation number.
 
+### Presence model as implemented (milestone 2, supplied by Stella 2026-10-19)
+- Page et al. (2008): Eq. (2) P(t+1) = P(t)·T11 + (1−P(t))·T01; Eq. (4) μ = (T01+T10)/(T00+T11); Eq. (5) T01(t) = ((μ−1)/(μ+1))·P(t) + P(t+1); Eq. (6) T11(t) = ((P(t)−1)/P(t))·[((μ−1)/(μ+1))·P(t) + P(t+1)] + P(t+1)/P(t); T00 = 1−T01, T10 = 1−T11.
+- Condition 0 ≤ T_ij ≤ 1. When violated, μ is forced for that step to the valid value closest to the input μ (as in the paper). No error. The tool logs how often and at which hours.
+- Initial state: absent at 00:00 on 1 January.
+- ASSUMPTION (not in the paper): a transition out of a state that cannot occur (present when P(t) = 0, absent when P(t) = 1) is set to P(t+1), never triggers forcing and is not logged. This covers Eq. (6) being undefined at P(t) = 0.
+- Time step: hourly. The paper used 15 minutes and gives no numeric μ values (Fig. 5: measured μ mostly well below 0.5 at 15 min). μ is a user input, labelled "hourly time step, not from paper". Sensitivity option: 3 μ values. The tool shows the 15-minute μ with the same hour-to-hour persistence (valid where P is constant) for orientation.
+- Long absences (holidays, sick leave): not in v1.
+
 ## 5. Inputs
 
 - **Illuminance CSV:** 8760 rows, one column, work-plane illuminance in lux. Exported from Climate Studio or Honeybee annual daylight. Use one sensor point or the zone average, and preprocess to a single column.
-- **Presence profile:** 24 hourly presence probabilities (weekday), plus weekend handling.
+- **Presence profile:** 24 hourly weekday presence probabilities. Default Sveby (2010), *Brukarindata kontor*: P = 0.70 on weekdays 08:00–17:00 (9 hours), 0 otherwise. Weekends absent in v1. Public holidays: v2.
+- **Calendar:** weekday of 1 January is a setting and must match "Day of Week for Start Day" in the IDF RunPeriod (Stella to confirm).
 - **Model coefficients:** from the papers in section 4.
 - **Settings:** number of occupants (default 100), random seed, illuminance setpoint for the deterministic case, lighting power density (W/m²), floor area.
-- **Fixed schedule:** Sveby office lighting/occupancy values (supplied by Stella).
+- **Fixed schedule:** Sveby (2010), ch. 8: lighting on 100 % on weekdays 08:00–17:00 regardless of daylight or presence, 7.6 W/m² average (Table 8.6).
 
 ## 6. Outputs
 
-- Schedule CSVs (8760 rows, 0/1 or fraction) for each occupant, in a format usable by Honeybee / EnergyPlus `Schedule:File`
+### Schedule export (milestone 6)
+- **Per occupant, two schedules:** a lighting schedule (0/1) and an occupancy schedule (0/1).
+- **Format:** plain CSV, 8760 rows (row 1 = 1 January 00:00–01:00, non-leap year, standard time without daylight saving), **one column per occupant**, comma separator, point decimal, one header row with occupant IDs. Lighting and occupancy in separate files.
+- **Target tools:** Honeybee / EnergyPlus `Schedule:File` (one object per occupant, using *Column Number* and *Rows to Skip at Top = 1*), IES VE free-form profiles, and IDA ICE. The exact import requirements of IES VE and IDA ICE (header row, time column, separator, decimal sign) are verified against each tool's documentation in milestone 6. A tool-specific variant is added only if the plain CSV does not import.
+- **Optional averaged fractional schedule** for multi-occupant zones: the hourly mean of the N individual 0/1 schedules (values 0–1). Clearly labelled as an average in both the file name and the header (e.g. `lighting_AVERAGE_of_100_occupants.csv`). It represents the fraction of individually controlled luminaire groups that are on (or the fraction of occupants present). It is not the same as one shared luminaire that any occupant can switch on, and it smooths out the individual variability this tool exists to show.
+
+### Results
 - Summary table: annual lighting on-hours and kWh/m² per case
 - Histogram of stochastic results with the fixed and deterministic cases marked as lines
 - Statistics: mean, median, P10, P90, min, max
@@ -90,7 +105,14 @@ This is a fast first-order comparison. Full heating/cooling interaction is check
 7. Polish, mobile check, short method note on the page with citations
 8. Run exported schedules in Honeybee for one case study → LinkedIn post
 
-## 10. Deliverables for sharing
+## 10. Method note (milestone 7): content to include
+
+- Reference for measured use: Jagemar (2004) measured lighting use of about 65 %, dropping toward 30 % in summer (Sveby, Bilaga 2). Contrast with the fixed 100 % schedule.
+- Limitation: no long absences in v1. The Swedish July holiday falls in the high-daylight months, so its effect on lighting energy is small.
+- Limitation: hourly time step; μ is not taken from the paper (see section 4).
+- Limitation: weekends absent, no public holidays.
+
+## 11. Deliverables for sharing
 
 - Hosted single-page tool (GitHub Pages)
 - One case-study result (e.g. south-facing office in Malmö)

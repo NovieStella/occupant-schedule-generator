@@ -2,7 +2,7 @@
 
 A single-page browser tool that turns annual work-plane illuminance into stochastic occupant lighting schedules, using published, cited behaviour models (Page et al. 2008; Reinhart 2004, Lightswitch-2002). It compares the spread of lighting energy use with a fixed standard (Sveby) schedule.
 
-**Status:** milestone 1 of 8, data input and preview.
+**Status:** milestone 2 of 8, seeded random numbers and presence model (Page et al. 2008).
 
 ## Use
 Open `index.html` in a browser (or the GitHub Pages link) and load a CSV with one column of 8760 hourly illuminance values in lux. The file is read locally; nothing is uploaded.

@@ -18,7 +18,11 @@ Stella is a building energy and LCA specialist (MSc, Lund University). She knows
 - Must work on phone width as well as desktop.
 
 ## Code structure inside index.html
-The script is split into numbered sections: 1 constants, 2 data functions (pure), 3 UI, 4 charts, 5 event wiring, 6 test panel. Model logic added in later milestones goes in its own pure-function section, before UI. UI code may call pure functions; pure functions never touch the DOM.
+The script is split into numbered sections: 1 constants, 2 data functions, 3 random numbers, 4 presence model (Page et al. 2008), 5 UI, 6 charts, 7 event wiring, 8 test panel. Sections 2–4 are pure functions. Model logic added in later milestones (lighting switching in M3) goes in its own pure-function section before UI. UI code may call pure functions; pure functions never touch the DOM.
+
+## Random numbers
+- Only `mulberry32` (section 3). Each occupant has a separate stream per process: `streamSeed(seed, occupant, STREAM.presence | STREAM.lighting)`. Lighting (M3) must use `STREAM.lighting`, so that changing the lighting model never changes presence, and occupant k is the same for any N.
+- Presence draws one random number every hour, needed or not, to keep streams aligned.
 
 ## Scientific integrity rules (most important)
 - Never invent model coefficients or recall them from memory. If a coefficient is missing, stop and ask Stella for the value from the paper.
@@ -31,7 +35,7 @@ The script is split into numbered sections: 1 constants, 2 data functions (pure)
 ## Input conventions (decided in milestone 1)
 - Illuminance CSV: one column, exactly 8760 values, one optional text header row. Decimal comma accepted (Swedish Excel).
 - Rejected with a clear message: wrong row count (8784 flagged as leap year), text or negative values, blank lines inside the data, more than one column (semicolon, tab, two or more commas, or a comma file whose numbers count up as an hour index).
-- ASSUMPTION: row i (0-based) = hour interval starting (i % 24):00 on day floor(i / 24), non-leap year from 1 Jan 00:00. Re-check against the Climate Studio / Honeybee export and EnergyPlus Schedule:File alignment in milestone 6.
+- ASSUMPTION: row i (0-based) = hour interval starting (i % 24):00 on day floor(i / 24), non-leap year from 1 Jan 00:00. Checked on Stella's Grasshopper export (2026-10-19): the daily light centre follows standard-time (CET) solar noon within +0.1 to +0.3 h all year and does not jump at the daylight-saving dates, so the rows are in standard time and aligned to within the hour. EnergyPlus Schedule:File alignment is still confirmed in milestone 6.
 - Working hours for preview statistics: 08:00–17:00 (intervals starting 08…16), all 365 days until the presence model adds weekday handling in milestone 2.
 
 ## Testing
@@ -47,5 +51,5 @@ The script is split into numbered sections: 1 constants, 2 data functions (pure)
 - Do not rewrite working code unless asked.
 
 ## Outputs
-- Schedule CSVs: 8760 rows, compatible with EnergyPlus `Schedule:File`.
+- Schedule CSVs as defined in PROJECT_SPEC.md section 6: per occupant a lighting (0/1) and an occupancy (0/1) schedule, 8760 rows, one column per occupant, for EnergyPlus/Honeybee, IES VE and IDA ICE. The optional averaged fractional schedule must always be labelled as an average.
 - Every export includes a metadata file listing seed, coefficients, settings and date.

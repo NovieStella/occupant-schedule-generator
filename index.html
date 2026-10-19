@@ -15,8 +15,8 @@
     --faint: #8b958f;
     --line: #dddcd3;
     --amber: #c8841a;
-    --amber-soft: #f3e2c2;
     --blue: #2e5b72;
+    --green: #5f8a3a;
     --grey-bar: #c9cdc8;
     --warn-bg: #fff5e2;
     --warn-line: #dfa441;
@@ -48,13 +48,13 @@
 
   main.layout {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: 330px minmax(0, 1fr);
     gap: 20px;
     padding: 20px 16px 40px;
   }
   @media (max-width: 820px) {
     main.layout { grid-template-columns: minmax(0, 1fr); }
-    /* On phones, skip the "coming later" cards so results follow the upload directly. */
+    /* On phones, skip the "coming later" cards so results follow the inputs directly. */
     .card.placeholder { display: none; }
   }
 
@@ -86,6 +86,30 @@
   .file-status { margin-top: 10px; font-size: 13px; }
   .file-status .name { font-family: var(--mono); word-break: break-all; }
   .file-status.ok { color: var(--ok); }
+  .file-status.bad { color: var(--error-line); }
+
+  /* Form fields */
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+  .field > span { flex: 1 1 auto; }
+  .field input, .field select {
+    width: 130px; flex: 0 0 auto; font: inherit; font-size: 16px; padding: 5px 8px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink);
+  }
+  .field small { display: block; font-size: 12px; color: var(--muted); }
+  textarea {
+    width: 100%; font-family: var(--mono); font-size: 14px; padding: 8px;
+    border: 1px solid var(--line); border-radius: 6px; resize: vertical; color: var(--ink); background: var(--surface);
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+  button.secondary, button.primary {
+    font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 6px; cursor: pointer; min-height: 36px;
+  }
+  button.secondary { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  button.primary { border: 0; background: var(--ink); color: #fff; width: 100%; font-weight: 600; margin-top: 4px; }
+  button.primary:hover { background: #33403c; }
+  .seg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; margin-bottom: 10px; }
+  .seg label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
+  .tag { display: inline-block; font-size: 11px; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; white-space: nowrap; }
 
   /* Placeholder cards for later milestones */
   .card.placeholder { opacity: .55; }
@@ -104,7 +128,6 @@
   .msg.note { background: #f2f4f3; border-color: var(--faint); }
   .msg.ok { background: #ecf6ef; border-color: var(--ok); }
 
-  /* Empty state */
   .empty {
     text-align: center; color: var(--muted); padding: 48px 16px;
     border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface);
@@ -119,6 +142,16 @@
   .pct { color: var(--muted); font-size: 12px; margin-left: 4px; }
   .footnote { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 
+  /* Results table (scrolls sideways on phones instead of breaking the page) */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.results { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
+  table.results th, table.results td { padding: 6px 8px; border-bottom: 1px solid #eeede7; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.results th { font-weight: 600; font-size: 12px; color: var(--muted); vertical-align: bottom; white-space: normal; }
+  table.results th:first-child, table.results td:first-child { text-align: left; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+  .check-ok { color: var(--ok); }
+  .check-bad { color: var(--error-line); }
+
   /* Charts */
   .chart-box { position: relative; height: 280px; }
   @media (max-width: 520px) { .chart-box { height: 230px; } }
@@ -129,7 +162,9 @@
   }
   .week-controls button:disabled { opacity: .4; cursor: default; }
   .week-controls input[type=range] { flex: 1 1 160px; accent-color: var(--amber); }
-  .week-label { font-size: 13px; color: var(--muted); min-width: 170px; font-variant-numeric: tabular-nums; }
+  .week-label { font-size: 13px; color: var(--muted); min-width: 190px; font-variant-numeric: tabular-nums; }
+  .week-presence { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 10px; align-items: center; }
+  .week-presence input, .week-presence select { font: inherit; font-size: 16px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; width: 84px; background: var(--surface); }
 
   footer.site { padding: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 
@@ -148,14 +183,14 @@
   <div class="wrap">
     <h1>Occupant Schedule Generator</h1>
     <p>Turns annual work-plane illuminance into stochastic occupant lighting schedules using published behaviour models, and compares them with a fixed standard schedule.</p>
-    <span class="milestone-tag">Milestone 1 · data input and preview</span>
+    <span class="milestone-tag">Milestone 2 · seeded random numbers and presence model</span>
   </div>
 </header>
 
 <div class="wrap">
   <section id="test-panel" class="card" style="margin: 20px 16px 0;">
     <h2>Test panel</h2>
-    <p class="hint">Known-answer tests for the pure data functions. Shown because the URL contains <code>?test</code>.</p>
+    <p class="hint">Known-answer and convergence tests for the pure functions. Shown because the URL contains <code>?test</code>.</p>
     <div id="test-summary"></div>
     <ol id="test-list"></ol>
   </section>
@@ -175,22 +210,58 @@
         <p class="footnote">The file is read in your browser. Nothing is uploaded anywhere.</p>
       </div>
 
-      <div class="card placeholder"><h3 data-milestone="M2">Presence profile</h3><p>24 hourly presence probabilities and weekend handling.</p></div>
+      <div class="card">
+        <h2>2. Presence profile</h2>
+        <p class="hint">Weekday presence probability for each hour, 24 values from 00:00 to 23:00, each 0–1. Paste a row or column from Excel. Weekends are absent in v1.</p>
+        <textarea id="profile-input" rows="3" spellcheck="false" aria-label="24 hourly presence probabilities"></textarea>
+        <div style="margin-top:8px"><button type="button" class="secondary" id="profile-sveby">Reset to Sveby office</button></div>
+        <div class="file-status" id="profile-status"></div>
+        <p class="footnote">Default: Sveby (2010), <em>Brukarindata kontor</em>: P = 0.70 on weekdays 08:00–17:00 (9 hours), 0 otherwise.</p>
+      </div>
+
+      <div class="card">
+        <h2>3. Mobility μ <span class="tag">hourly time step, not from paper</span></h2>
+        <p class="hint">Page et al. (2008) mobility parameter, Eq. (4). The paper used a 15-minute step and gives no hourly values, so μ here is your input.</p>
+        <div class="seg" role="radiogroup" aria-label="Number of μ values">
+          <label><input type="radio" name="mu-mode" value="single" checked> One value</label>
+          <label><input type="radio" name="mu-mode" value="sens"> Sensitivity, 3 values</label>
+        </div>
+        <label class="field" data-mu="0"><span>μ<sub>1</sub> (hourly)<small id="mu-eq-0"></small></span><input type="number" id="mu-0" min="0.01" step="0.01" value="0.38"></label>
+        <label class="field" data-mu="1" hidden><span>μ<sub>2</sub> (hourly)<small id="mu-eq-1"></small></span><input type="number" id="mu-1" min="0.01" step="0.01" value="0.67"></label>
+        <label class="field" data-mu="2" hidden><span>μ<sub>3</sub> (hourly)<small id="mu-eq-2"></small></span><input type="number" id="mu-2" min="0.01" step="0.01" value="0.93"></label>
+        <p class="footnote">"≈ 15-min μ" is the 15-minute μ with the same hour-to-hour persistence where P is constant (two-state Markov chain, state read on the hour). Orientation only. Defaults correspond to 15-minute μ = 0.10, 0.20 and 0.40.</p>
+      </div>
+
+      <div class="card">
+        <h2>4. Run settings</h2>
+        <label class="field"><span>Occupants</span><input type="number" id="n-occ" min="1" max="1000" step="1" value="100"></label>
+        <label class="field"><span>Random seed</span><input type="number" id="seed" min="0" max="4294967295" step="1" value="12345"></label>
+        <label class="field"><span>1 January is a</span>
+          <select id="start-dow">
+            <option value="0" selected>Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+            <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+          </select>
+        </label>
+        <p class="footnote" style="margin-top:0">Match "Day of Week for Start Day" in your IDF RunPeriod. Monday is a placeholder until you confirm it.</p>
+        <button type="button" class="primary" id="run-presence">Run presence model</button>
+        <div class="file-status" id="run-status"></div>
+      </div>
+
       <div class="card placeholder"><h3 data-milestone="M3">Switching models</h3><p>Coefficients from the original papers, entered and verified by you.</p></div>
-      <div class="card placeholder"><h3 data-milestone="M2–M5">Settings</h3><p>Occupants, random seed, setpoint, LPD (W/m²), floor area.</p></div>
-      <div class="card placeholder"><h3 data-milestone="M5">Fixed schedule</h3><p>Sveby office values for comparison.</p></div>
-      <div class="card placeholder"><h3 data-milestone="M6">Export</h3><p>Schedule CSVs, summary and metadata.</p></div>
+      <div class="card placeholder"><h3 data-milestone="M5">Lighting settings</h3><p>Setpoint, LPD (W/m²), floor area.</p></div>
+      <div class="card placeholder"><h3 data-milestone="M5">Fixed schedule</h3><p>Sveby: lights on 100 % weekdays 08:00–17:00, 7.6 W/m².</p></div>
+      <div class="card placeholder"><h3 data-milestone="M6">Export</h3><p>Lighting and occupancy schedules, summary and metadata.</p></div>
     </aside>
 
     <!-- ===== Results ===== -->
     <section id="results">
-      <div class="empty" id="empty-state">Load an illuminance CSV to see the preview.</div>
+      <div class="empty" id="empty-state">Load an illuminance CSV, or run the presence model.</div>
 
       <div id="preview" hidden>
         <div id="messages"></div>
 
         <div class="card">
-          <h2>Summary</h2>
+          <h2>Illuminance summary</h2>
           <div class="stats-grid">
             <div>
               <h3>Whole year (8760 h)</h3>
@@ -201,7 +272,7 @@
               <table class="stats" id="stats-work"></table>
             </div>
           </div>
-          <p class="footnote">"≥ 300 lx" counts hours with illuminance at or above the level. Working hours cover all 365 days, weekends included, until the presence profile arrives in milestone 2.</p>
+          <p class="footnote">"≥ 300 lx" counts hours with illuminance at or above the level. Working hours here cover all 365 days, weekends included.</p>
         </div>
 
         <div class="card">
@@ -216,17 +287,39 @@
           <p class="hint">Daily maximum, and daily mean over working hours 08:00–17:00.</p>
           <div class="chart-box"><canvas id="chart-daily"></canvas></div>
         </div>
+      </div>
+
+      <div id="presence-results" hidden>
+        <div class="card">
+          <h2>Presence model results</h2>
+          <p class="hint" id="presence-meta"></p>
+          <div class="table-scroll"><table class="results" id="presence-table"></table></div>
+          <p class="footnote" id="presence-footnote"></p>
+          <div id="presence-messages" style="margin-top:12px"></div>
+        </div>
 
         <div class="card">
-          <h2>Hourly illuminance, one week</h2>
-          <div class="week-controls">
-            <button type="button" id="week-prev" aria-label="Previous week">‹</button>
-            <input type="range" id="week-slider" min="1" max="53" value="1" aria-label="Week of year">
-            <button type="button" id="week-next" aria-label="Next week">›</button>
-            <span class="week-label" id="week-label"></span>
-          </div>
-          <div class="chart-box"><canvas id="chart-week"></canvas></div>
+          <h2>Validation: simulated vs input profile (weekdays)</h2>
+          <p class="hint">Bars are the input profile. Points are the mean simulated presence over all occupants and weekdays. The model passes if every hour is within 4 standard errors of the input.</p>
+          <div id="validation-messages"></div>
+          <div class="chart-box"><canvas id="chart-validation"></canvas></div>
         </div>
+      </div>
+
+      <div class="card" id="week-card" hidden>
+        <h2>One week, hour by hour</h2>
+        <div class="week-controls">
+          <button type="button" id="week-prev" aria-label="Previous week">‹</button>
+          <input type="range" id="week-slider" min="1" max="53" value="1" aria-label="Week of year">
+          <button type="button" id="week-next" aria-label="Next week">›</button>
+          <span class="week-label" id="week-label"></span>
+        </div>
+        <div class="week-presence" id="week-presence-controls" hidden>
+          <label>Occupant <input type="number" id="week-occ" min="1" value="1"></label>
+          <label id="week-mu-wrap">μ <select id="week-mu"></select></label>
+          <span>Shaded hours: occupant present.</span>
+        </div>
+        <div class="chart-box"><canvas id="chart-week"></canvas></div>
       </div>
     </section>
   </main>
@@ -248,18 +341,16 @@ const DAYS_PER_YEAR = 365;
 const HOURS_PER_YEAR = HOURS_PER_DAY * DAYS_PER_YEAR; // 8760
 
 // ASSUMPTION: row i (0-based, header excluded) is the hour interval that starts
-// at (i % 24):00 on day floor(i / 24) of a non-leap year starting 1 January 00:00.
-// Must be re-checked against the Climate Studio / Honeybee export convention and
-// EnergyPlus Schedule:File alignment in milestone 6.
+// at (i % 24):00 on day floor(i / 24) of a non-leap year starting 1 January 00:00,
+// standard time (no daylight saving). Checked on Stella's Grasshopper export
+// (2026-10-19); EnergyPlus Schedule:File alignment is confirmed in milestone 6.
 
-// ASSUMPTION: working hours for the preview are 08:00–17:00, i.e. the nine
-// intervals starting 08:00 ... 16:00, on all 365 days (weekends included,
-// because weekday handling arrives with the presence model in milestone 2).
+// ASSUMPTION: working hours for the illuminance preview are 08:00–17:00, i.e. the
+// nine intervals starting 08:00 ... 16:00, on all 365 days.
 const WORK_START_HOUR = 8;  // first interval: 08:00–09:00
 const WORK_END_HOUR = 17;   // exclusive: last interval is 16:00–17:00
 
-// Reference levels for the preview only. The user-set setpoint for the
-// deterministic case is added in milestone 5.
+// Reference levels for the preview only. The user-set setpoint arrives in milestone 5.
 const PREVIEW_SETPOINTS_LX = [300, 500];
 
 // Data-quality heuristics (not model coefficients).
@@ -279,6 +370,18 @@ const MONTHS = [
   ["Jan", 31], ["Feb", 28], ["Mar", 31], ["Apr", 30], ["May", 31], ["Jun", 30],
   ["Jul", 31], ["Aug", 31], ["Sep", 30], ["Oct", 31], ["Nov", 30], ["Dec", 31],
 ];
+const WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // index 0 = Monday
+
+// Presence profile from Sveby (2010), Brukarindata kontor (values supplied by Stella):
+// P = 0.70 on weekdays for 08:00–17:00, 0 otherwise; weekends absent.
+// Interval convention as above: hours 8..16 are the nine intervals 08:00–09:00 ... 16:00–17:00.
+const SVEBY_OFFICE_PRESENCE = Array.from({ length: HOURS_PER_DAY }, (_, h) => (h >= 8 && h < 17 ? 0.7 : 0));
+
+// Validation tolerance: simulated hourly mean must be within this many standard errors.
+const CONVERGENCE_SE = 4;
+
+// Hard limit to keep memory reasonable in the browser (3 μ × 1000 × 8760 bytes ≈ 26 MB).
+const MAX_OCCUPANTS = 1000;
 
 
 /* =====================================================================
@@ -370,6 +473,40 @@ function parseIlluminanceCSV(text) {
   if (headerText !== null) notes.push(`First row "${shorten(headerText)}" was treated as a header and skipped.`);
   if (usedDecimalComma) notes.push("Decimal commas were found and read as decimal points.");
   return { ok: true, values, notes };
+}
+
+/**
+ * Parse 24 hourly presence probabilities pasted from Excel or typed.
+ * Accepts tabs, spaces, semicolons or line breaks between values (then a comma is a
+ * decimal comma), or a single comma-separated line of exactly 24 values.
+ */
+function parseProfile24(text) {
+  const fail = (error) => ({ ok: false, error });
+  const s = String(text).trim();
+  if (s === "") return fail("Enter 24 values, one per hour from 00:00 to 23:00.");
+
+  let tokens;
+  if (/[;\t\r\n]/.test(s)) {
+    tokens = s.split(/[;\t\r\n ]+/).filter(Boolean).map((t) => t.replace(",", "."));
+  } else if (s.includes(",") && s.split(",").length === 24) {
+    tokens = s.split(",").map((t) => t.trim());
+  } else {
+    tokens = s.split(/\s+/).filter(Boolean).map((t) => t.replace(",", "."));
+  }
+  if (tokens.length !== 24) {
+    return fail(`Expected 24 values (one per hour, 00:00–23:00) but found ${tokens.length}.`);
+  }
+  const values = [];
+  for (let h = 0; h < 24; h++) {
+    if (!NUMBER_PATTERN.test(tokens[h])) return fail(`Value for ${hourLabel(h)} is not a number: "${shorten(tokens[h], 20)}".`);
+    values.push(parseFloat(tokens[h]));
+  }
+  const over = values.findIndex((v) => v < 0 || v > 1);
+  if (over >= 0) {
+    const pctHint = values.every((v) => v >= 0 && v <= 100) ? " These look like percentages: divide by 100." : "";
+    return fail(`Value for ${hourLabel(over)} is ${values[over]}. Probabilities must be between 0 and 1.${pctHint}`);
+  }
+  return { ok: true, values };
 }
 
 function shorten(s, max = 40) {
@@ -500,20 +637,316 @@ function fmtLux(x) {
   return fmt(x, x > 0 && x < 10 ? 1 : 0);
 }
 
+/** Quantile of a sorted array, linear interpolation between order statistics. */
+function quantileSorted(sorted, q) {
+  const pos = (sorted.length - 1) * q;
+  const lo = Math.floor(pos), hi = Math.ceil(pos);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
+
 
 /* =====================================================================
-   3. UI
+   3. RANDOM NUMBERS (one seeded generator; Math.random() is never used)
    ===================================================================== */
 
-const state = { values: null, summary: null, profile: null, daily: null, week: 1 };
+/**
+ * mulberry32: small seeded 32-bit generator (Tommy Ettinger, public domain).
+ * Returns a function that gives floats in [0, 1). The state is kept as an
+ * unsigned 32-bit integer, so the sequence never loses precision; outputs are
+ * identical to the published reference implementation.
+ */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** MurmurHash3 32-bit finaliser: spreads the bits of a 32-bit integer. */
+function fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+// Each occupant gets separate random streams per process, so that e.g. changing
+// the lighting model (milestone 3) never changes anyone's presence, and occupant k
+// behaves the same whether 10 or 1000 occupants are simulated.
+const STREAM = { presence: 1, lighting: 2 };
+
+/** Seed for (run seed, occupant index 0-based, stream id). */
+function streamSeed(seed, occupant, stream) {
+  let h = fmix32(seed >>> 0);
+  h = fmix32((h ^ (occupant + 1)) >>> 0);
+  h = fmix32((h ^ Math.imul(stream, 0x9E3779B9)) >>> 0);
+  return h;
+}
+
+
+/* =====================================================================
+   4. PRESENCE MODEL — Page, Robinson, Morel & Scartezzini (2008),
+      "A generalised stochastic model for the simulation of occupant presence",
+      Energy and Buildings 40(2), 83–98.
+   ===================================================================== */
+
+/** Day of week for day index 0..364. 0 = Monday ... 6 = Sunday. */
+function dayOfWeek(dayIndex, startWeekday) {
+  return (startWeekday + dayIndex) % 7;
+}
+function isWeekendDay(dayIndex, startWeekday) {
+  return dayOfWeek(dayIndex, startWeekday) >= 5;
+}
+function countWeekdays(startWeekday) {
+  let n = 0;
+  for (let d = 0; d < DAYS_PER_YEAR; d++) if (!isWeekendDay(d, startWeekday)) n++;
+  return n;
+}
+
+/** 8760 hourly presence probabilities: weekday profile on Mon–Fri, 0 on Sat–Sun (v1). */
+function annualPresenceProfile(weekdayProfile, startWeekday) {
+  const P = new Float64Array(HOURS_PER_YEAR);
+  for (let d = 0; d < DAYS_PER_YEAR; d++) {
+    if (isWeekendDay(d, startWeekday)) continue;
+    for (let h = 0; h < HOURS_PER_DAY; h++) P[d * HOURS_PER_DAY + h] = weekdayProfile[h];
+  }
+  return P;
+}
+
+/** Shorthand used in Eq. (5) and (6): a = (μ − 1)/(μ + 1). Monotonic in μ. */
+function muToA(mu) { return (mu - 1) / (mu + 1); }
+function aToMu(a) { return (1 + a) / (1 - a); }
+
+/** Page et al. (2008), Eq. (5): T01(t) = ((μ−1)/(μ+1))·P(t) + P(t+1). */
+function pageT01(P, Pnext, a) {
+  return a * P + Pnext;
+}
+
+/** Page et al. (2008), Eq. (6): T11(t) = ((P(t)−1)/P(t))·[((μ−1)/(μ+1))·P(t) + P(t+1)] + P(t+1)/P(t).
+ *  Undefined for P(t) = 0. */
+function pageT11(P, Pnext, a) {
+  return ((P - 1) / P) * (a * P + Pnext) + Pnext / P;
+}
+
+function clamp01(x) { return Math.min(1, Math.max(0, x)); }
+
+/**
+ * Transition probabilities for the step t → t+1.
+ * Returns { T01, T11, muUsed, forced }. T00 = 1 − T01 and T10 = 1 − T11.
+ *
+ * Validity condition 0 ≤ T_ij ≤ 1 (Page et al. 2008). When the input μ violates it,
+ * μ is forced, for this step only, to the valid value closest to the input μ (as in
+ * the paper). To find that value: for 0 < P < 1, Eq. (5) and Eq. (6) can be written
+ *   T01 = P(t+1) + a·P(t)            (Eq. 5 as is)
+ *   T11 = P(t+1) − a·(1 − P(t))      (Eq. 6, algebraically simplified)
+ * so 0 ≤ T01, T11 ≤ 1 give lower and upper bounds on a. Because a = (μ−1)/(μ+1)
+ * rises monotonically with μ, clamping a to those bounds gives the closest valid μ.
+ * a = 0 (μ = 1) always satisfies the bounds, so a valid μ always exists.
+ *
+ * ASSUMPTION (not covered by the paper): a transition out of a state that cannot
+ * occur is not constrained and is set to P(t+1), i.e. the μ = 1 (memoryless) value:
+ *   - P(t) = 0: the occupant cannot be present at t, so T11 is never used
+ *     (Eq. 6 is undefined there). T01 = P(t+1) follows from Eq. (5) for any μ.
+ *   - P(t) = 1: the occupant cannot be absent at t, so T01 is never used.
+ *     T11 = P(t+1) follows from Eq. (6) for any μ.
+ * These unused values never trigger μ forcing and are not counted in the log.
+ * (The chain only matches P exactly if the initial state matches P(0); see simulatePresence.)
+ */
+function pageTransition(P, Pnext, mu) {
+  const absentPossible = P < 1;
+  const presentPossible = P > 0;
+  let aLo = -1, aHi = 1; // a ∈ [−1, 1) ⇔ μ ∈ [0, ∞)
+
+  if (absentPossible && P > 0) {          // 0 ≤ T01 ≤ 1
+    aLo = Math.max(aLo, -Pnext / P);
+    aHi = Math.min(aHi, (1 - Pnext) / P);
+  }
+  if (presentPossible && P < 1) {         // 0 ≤ T11 ≤ 1
+    aLo = Math.max(aLo, (Pnext - 1) / (1 - P));
+    aHi = Math.min(aHi, Pnext / (1 - P));
+  }
+
+  const aIn = muToA(mu);
+  const EPS = 1e-12;
+  let a = aIn, forced = false;
+  if (aIn < aLo - EPS) { a = aLo; forced = true; }
+  else if (aIn > aHi + EPS) { a = aHi; forced = true; }
+
+  // clamp01 only removes floating-point rounding (e.g. 1.0000000000000002) at a forced bound.
+  const T01 = absentPossible ? clamp01(pageT01(P, Pnext, a)) : Pnext;
+  const T11 = presentPossible ? clamp01(pageT11(P, Pnext, a)) : Pnext;
+  return { T01, T11, muUsed: forced ? aToMu(a) : mu, forced };
+}
+
+/** Transition probabilities for every step of the year, plus the μ-forcing log. */
+function buildTransitions(Pyear, mu) {
+  const steps = Pyear.length - 1;
+  const T01 = new Float64Array(steps), T11 = new Float64Array(steps);
+  const groups = new Map();
+  let forcedCount = 0;
+  for (let t = 0; t < steps; t++) {
+    const r = pageTransition(Pyear[t], Pyear[t + 1], mu);
+    T01[t] = r.T01;
+    T11[t] = r.T11;
+    if (r.forced) {
+      forcedCount++;
+      const fromHour = t % HOURS_PER_DAY;
+      const key = `${fromHour}|${r.muUsed.toFixed(3)}`;
+      const g = groups.get(key) || { fromHour, muUsed: r.muUsed, count: 0 };
+      g.count++;
+      groups.set(key, g);
+    }
+  }
+  const forcedGroups = [...groups.values()].sort((x, y) => y.count - x.count || x.fromHour - y.fromHour);
+  return { mu, steps, T01, T11, forcedCount, forcedGroups };
+}
+
+/**
+ * One occupant's hourly presence for the year (Uint8Array, 1 = present).
+ * Page et al. (2008), Eq. (2): P(t+1) = P(t)·T11 + (1 − P(t))·T01 — the chain below
+ * reproduces this in expectation. One random number is drawn every hour, whether or
+ * not it is needed, so the stream stays aligned for any settings.
+ * Initial state: absent at 00:00 on 1 January (office; Stella, 2026-10-19).
+ */
+function simulatePresence(trans, rng) {
+  const s = new Uint8Array(trans.steps + 1);
+  s[0] = 0;
+  for (let t = 0; t < trans.steps; t++) {
+    const u = rng();
+    s[t + 1] = u < (s[t] ? trans.T11[t] : trans.T01[t]) ? 1 : 0;
+  }
+  return s;
+}
+
+/** Summary statistics for a set of presence schedules. */
+function presenceStats(schedules, Pyear, startWeekday) {
+  const N = schedules.length;
+  const weekdays = countWeekdays(startWeekday);
+  const occHours = new Array(N);
+  const hourCounts = Array.from({ length: HOURS_PER_DAY }, () => new Float64Array(N));
+  let totalArrivals = 0, totalOccupied = 0, weekendHours = 0;
+
+  for (let k = 0; k < N; k++) {
+    const s = schedules[k];
+    let occ = 0, prev = 0;
+    for (let t = 0; t < s.length; t++) {
+      const v = s[t];
+      occ += v;
+      if (v && !prev) totalArrivals++;
+      prev = v;
+      if (v) {
+        const d = Math.floor(t / HOURS_PER_DAY);
+        if (isWeekendDay(d, startWeekday)) weekendHours++;
+        else hourCounts[t % HOURS_PER_DAY][k]++;
+      }
+    }
+    occHours[k] = occ;
+    totalOccupied += occ;
+  }
+
+  // Per-hour mean over occupants of each occupant's weekday frequency, and its standard error.
+  const hourMean = [], hourSE = [];
+  for (let h = 0; h < HOURS_PER_DAY; h++) {
+    const f = hourCounts[h];
+    let m = 0;
+    for (let k = 0; k < N; k++) m += f[k] / weekdays;
+    m /= N;
+    let v = 0;
+    for (let k = 0; k < N; k++) v += (f[k] / weekdays - m) ** 2;
+    const sd = N > 1 ? Math.sqrt(v / (N - 1)) : NaN;
+    hourMean.push(m);
+    hourSE.push(sd / Math.sqrt(N));
+  }
+
+  const sorted = occHours.slice().sort((x, y) => x - y);
+  let expected = 0;
+  for (let t = 0; t < Pyear.length; t++) expected += Pyear[t];
+
+  return {
+    N, weekdays, weekendHours, expectedHours: expected,
+    occupied: {
+      mean: totalOccupied / N, p10: quantileSorted(sorted, 0.1), p90: quantileSorted(sorted, 0.9),
+      min: sorted[0], max: sorted[N - 1],
+    },
+    arrivalsPerWeekday: totalArrivals / (N * weekdays),
+    meanStayHours: totalArrivals > 0 ? totalOccupied / totalArrivals : 0,
+    hourMean, hourSE,
+  };
+}
+
+/**
+ * Validation from PROJECT_SPEC section 8: simulated weekday presence per hour converges
+ * to the input profile. Hours with P = 0 or 1 must match exactly; others within k·SE.
+ */
+function checkConvergence(profile24, stats, k = CONVERGENCE_SE) {
+  const rows = [];
+  for (let h = 0; h < HOURS_PER_DAY; h++) {
+    const P = profile24[h], m = stats.hourMean[h], se = stats.hourSE[h];
+    const dev = m - P;
+    let ok;
+    if (P === 0 || P === 1) ok = Math.abs(dev) < 1e-12;
+    else ok = Number.isFinite(se) && se > 0 ? Math.abs(dev) <= k * se : null; // null: cannot judge (N < 2)
+    rows.push({ hour: h, P, mean: m, se, dev, ok });
+  }
+  const judged = rows.filter((r) => r.ok !== null);
+  const worst = rows.reduce((w, r) => (Math.abs(r.dev) > Math.abs(w.dev) ? r : w), rows[0]);
+  return {
+    ok: judged.length === rows.length && judged.every((r) => r.ok) && stats.weekendHours === 0,
+    canJudge: judged.length === rows.length,
+    failedHours: rows.filter((r) => r.ok === false).map((r) => r.hour),
+    worst, rows,
+  };
+}
+
+/** Run the presence model for N occupants with one μ. */
+function runPresenceModel({ weekdayProfile, startWeekday, mu, seed, nOccupants }) {
+  const Pyear = annualPresenceProfile(weekdayProfile, startWeekday);
+  const trans = buildTransitions(Pyear, mu);
+  const schedules = [];
+  for (let k = 0; k < nOccupants; k++) {
+    const rng = mulberry32(streamSeed(seed, k, STREAM.presence));
+    schedules.push(simulatePresence(trans, rng));
+  }
+  const stats = presenceStats(schedules, Pyear, startWeekday);
+  return { mu, trans, schedules, stats, convergence: checkConvergence(weekdayProfile, stats) };
+}
+
+/*
+ * Orientation helper (not part of the model): for a two-state Markov chain with
+ * constant P, the lag-one correlation is ρ = T11 − T01 = −a = (1 − μ)/(1 + μ).
+ * Four 15-minute steps make one hourly step with ρ_hourly = ρ_15^4 and the same P.
+ * ASSUMPTION: only valid where P is constant and presence is read on the hour.
+ */
+function rhoFromMu(mu) { return (1 - mu) / (1 + mu); }
+function muFromRho(rho) { return (1 - rho) / (1 + rho); }
+function muHourlyFrom15min(mu15) { return muFromRho(Math.pow(rhoFromMu(mu15), 4)); }
+function mu15minFromHourly(muH) {
+  const r = rhoFromMu(muH);
+  return r < 0 ? null : muFromRho(Math.pow(r, 0.25)); // μ_hourly > 1 has no 15-min equivalent with ρ ≥ 0
+}
+
+
+/* =====================================================================
+   5. UI
+   ===================================================================== */
+
+const state = {
+  values: null, summary: null, profile: null, daily: null,
+  week: 1,
+  presence: null,   // { settings, runs: [runPresenceModel results] }
+};
 const charts = {};
 
 const $ = (id) => document.getElementById(id);
 
-function setFileStatus(html, ok = false) {
-  const el = $("file-status");
+function setStatus(id, html, kind = "") {
+  const el = $(id);
   el.innerHTML = html;
-  el.className = "file-status" + (ok ? " ok" : "");
+  el.className = "file-status" + (kind ? " " + kind : "");
 }
 
 function escapeHtml(s) {
@@ -524,28 +957,34 @@ function msgHtml(kind, title, text) {
   return `<div class="msg ${kind}"><strong>${escapeHtml(title)}</strong>${escapeHtml(text)}</div>`;
 }
 
+function updateEmptyState() {
+  $("empty-state").hidden = !$("preview").hidden || !$("presence-results").hidden;
+}
+
+/* ---- Illuminance ---- */
+
 function handleFile(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => loadText(reader.result, file.name);
-  reader.onerror = () => showError(file.name, "The file could not be read.");
+  reader.onerror = () => showFileError(file.name, "The file could not be read.");
   reader.readAsText(file);
 }
 
-function showError(fileName, error) {
+function showFileError(fileName, error) {
   state.values = null;
-  setFileStatus(`<span class="name">${escapeHtml(fileName)}</span>`);
-  $("empty-state").hidden = true;
+  setStatus("file-status", `<span class="name">${escapeHtml(fileName)}</span>`, "bad");
   $("preview").hidden = false;
   $("messages").innerHTML = msgHtml("error", "File not loaded", error);
   for (const id of ["stats-year", "stats-work", "timing-messages"]) $(id).innerHTML = "";
-  // Hide the cards below the message until a valid file is loaded.
   document.querySelectorAll("#preview > .card").forEach((c) => (c.hidden = true));
+  updateEmptyState();
+  renderWeekChart();
 }
 
 function loadText(text, fileName) {
   const parsed = parseIlluminanceCSV(text);
-  if (!parsed.ok) { showError(fileName, parsed.error); return; }
+  if (!parsed.ok) { showFileError(fileName, parsed.error); return; }
 
   state.values = parsed.values;
   state.summary = computeSummary(parsed.values);
@@ -553,10 +992,10 @@ function loadText(text, fileName) {
   state.daily = dailyStats(parsed.values);
   const checks = checkData(state.summary, state.profile);
 
-  setFileStatus(`✓ <span class="name">${escapeHtml(fileName)}</span> · ${fmt(parsed.values.length)} hours loaded`, true);
-  $("empty-state").hidden = true;
+  setStatus("file-status", `✓ <span class="name">${escapeHtml(fileName)}</span> · ${fmt(parsed.values.length)} hours loaded`, "ok");
   $("preview").hidden = false;
   document.querySelectorAll("#preview > .card").forEach((c) => (c.hidden = false));
+  updateEmptyState();
 
   const unitWarnings = checks.filter((c) => c.kind === "units");
   const timingWarnings = checks.filter((c) => c.kind === "timing");
@@ -568,7 +1007,8 @@ function loadText(text, fileName) {
     : msgHtml("ok", "Timing looks normal", "Peak near midday and no light at night.");
 
   renderStats(state.summary);
-  renderCharts();
+  renderIlluminanceCharts();
+  renderWeekChart();
 }
 
 function renderStats(s) {
@@ -588,20 +1028,199 @@ function renderStats(s) {
     s.setpoints.map((sp, k) => row(`Hours &lt; ${sp} lx`, `${fmt(s.workHours - s.atOrAboveWork[k])} h ${pct(s.workHours - s.atOrAboveWork[k], s.workHours)}`)).join("");
 }
 
+/* ---- Presence inputs ---- */
+
+function muMode() {
+  return document.querySelector('input[name="mu-mode"]:checked').value;
+}
+
+function updateMuFields() {
+  const sens = muMode() === "sens";
+  for (let i = 0; i < 3; i++) {
+    document.querySelector(`[data-mu="${i}"]`).hidden = i > 0 && !sens;
+    const mu = parseFloat($(`mu-${i}`).value);
+    let text = "";
+    if (Number.isFinite(mu) && mu > 0) {
+      const eq = mu15minFromHourly(mu);
+      text = eq === null ? "no 15-min equivalent (μ > 1)" : `≈ 15-min μ ${fmt(eq, 2)}`;
+    }
+    $(`mu-eq-${i}`).textContent = text;
+  }
+}
+
+function readProfile() {
+  const r = parseProfile24($("profile-input").value);
+  if (r.ok) {
+    const sum = r.values.reduce((s, v) => s + v, 0);
+    setStatus("profile-status", `✓ 24 values · expected ${fmt(sum, 2)} present hours per weekday`, "ok");
+  } else {
+    setStatus("profile-status", escapeHtml(r.error), "bad");
+  }
+  return r;
+}
+
+function readRunSettings() {
+  const errors = [];
+  const profile = readProfile();
+  if (!profile.ok) errors.push("Fix the presence profile.");
+
+  const nMu = muMode() === "sens" ? 3 : 1;
+  const mus = [];
+  for (let i = 0; i < nMu; i++) {
+    const mu = parseFloat($(`mu-${i}`).value);
+    if (!Number.isFinite(mu) || mu <= 0) errors.push(`μ${nMu > 1 ? i + 1 : ""} must be a number above 0.`);
+    else mus.push(mu);
+  }
+  const n = Number($("n-occ").value);
+  if (!Number.isInteger(n) || n < 1 || n > MAX_OCCUPANTS) errors.push(`Occupants must be a whole number from 1 to ${fmt(MAX_OCCUPANTS)}.`);
+  const seed = Number($("seed").value);
+  if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295) errors.push("Seed must be a whole number from 0 to 4 294 967 295.");
+  const startWeekday = Number($("start-dow").value);
+
+  return errors.length
+    ? { ok: false, errors }
+    : { ok: true, settings: { weekdayProfile: profile.values, mus, nOccupants: n, seed, startWeekday } };
+}
+
+function runPresence() {
+  const r = readRunSettings();
+  if (!r.ok) { setStatus("run-status", r.errors.map(escapeHtml).join("<br>"), "bad"); return; }
+  const st = r.settings;
+  const t0 = performance.now();
+  const runs = st.mus.map((mu) => runPresenceModel({
+    weekdayProfile: st.weekdayProfile, startWeekday: st.startWeekday, mu, seed: st.seed, nOccupants: st.nOccupants,
+  }));
+  const ms = performance.now() - t0;
+  state.presence = { settings: st, runs };
+  setStatus("run-status", `✓ ${runs.length > 1 ? runs.length + " × " : ""}${fmt(st.nOccupants)} occupants in ${fmt(ms)} ms`, "ok");
+
+  $("presence-results").hidden = false;
+  updateEmptyState();
+  renderPresenceResults();
+  setupWeekPresenceControls();
+  renderWeekChart();
+}
+
+function markStale() {
+  if (state.presence) setStatus("run-status", "Settings changed since the last run. Run again to update.", "");
+}
+
+/* ---- Presence results ---- */
+
+const SERIES_COLORS = () => [COLOR.amber, COLOR.blue, COLOR.green];
+
+function renderPresenceResults() {
+  const { settings: st, runs } = state.presence;
+  const s0 = runs[0].stats;
+  $("presence-meta").textContent =
+    `${fmt(st.nOccupants)} occupants · seed ${st.seed} · 1 January = ${WEEKDAY_NAMES[st.startWeekday]} · ` +
+    `${s0.weekdays} weekdays · weekends absent · hourly time step`;
+
+  const colors = SERIES_COLORS();
+  const head = `<tr><th>μ (hourly)</th><th>≈ 15-min μ</th><th>Present h/yr, mean</th><th>P10 – P90</th>` +
+    `<th>Arrivals per weekday</th><th>Mean stay (h)</th><th>μ forced</th><th>Converges</th></tr>`;
+  const rows = runs.map((r, i) => {
+    const eq = mu15minFromHourly(r.mu);
+    const c = r.convergence;
+    const conv = !c.canJudge ? "n/a" : c.ok ? '<span class="check-ok">✓</span>' : '<span class="check-bad">✗</span>';
+    return `<tr><td><span class="swatch" style="background:${colors[i]}"></span>${fmt(r.mu, 2)}</td>` +
+      `<td>${eq === null ? "–" : fmt(eq, 2)}</td>` +
+      `<td>${fmt(r.stats.occupied.mean)}</td>` +
+      `<td>${fmt(r.stats.occupied.p10)} – ${fmt(r.stats.occupied.p90)}</td>` +
+      `<td>${fmt(r.stats.arrivalsPerWeekday, 2)}</td>` +
+      `<td>${fmt(r.stats.meanStayHours, 1)}</td>` +
+      `<td>${fmt(r.trans.forcedCount)} of ${fmt(r.trans.steps)}</td>` +
+      `<td>${conv}</td></tr>`;
+  }).join("");
+  $("presence-table").innerHTML = `<thead>${head}</thead><tbody>${rows}</tbody>`;
+  $("presence-footnote").textContent =
+    `Expected present hours from the profile: ${fmt(s0.expectedHours, 1)} h/yr. ` +
+    "Arrivals include the first arrival of the day and returns after a break. Mean stay = present hours ÷ arrivals.";
+
+  // μ-forcing log and other notes
+  // One note per distinct forcing pattern, so identical logs for several μ are shown once.
+  const msgs = [];
+  const patterns = new Map();
+  for (const r of runs) {
+    const key = r.trans.forcedCount + "|" + r.trans.forcedGroups.map((g) => `${g.fromHour}:${g.muUsed.toFixed(3)}:${g.count}`).join(",");
+    if (!patterns.has(key)) patterns.set(key, { trans: r.trans, mus: [] });
+    patterns.get(key).mus.push(r.mu);
+  }
+  for (const { trans, mus } of patterns.values()) {
+    const who = `μ = ${mus.map((m) => fmt(m, 2)).join(", ")}`;
+    if (trans.forcedCount === 0) {
+      msgs.push(msgHtml("note", `${who}: never forced`, "The input μ satisfied 0 ≤ T ≤ 1 at every hour step."));
+    } else {
+      const parts = trans.forcedGroups.slice(0, 6).map((g) =>
+        `${hourLabel(g.fromHour)}→${hourLabel(g.fromHour + 1)} ×${fmt(g.count)} (μ used ${fmt(g.muUsed, 2)})`);
+      const more = trans.forcedGroups.length > 6 ? `, and ${trans.forcedGroups.length - 6} more` : "";
+      msgs.push(msgHtml("note", `${who}: forced at ${fmt(trans.forcedCount)} of ${fmt(trans.steps)} hour steps`,
+        `To keep every transition probability between 0 and 1, μ was moved to the closest valid value at: ${parts.join("; ")}${more}. ` +
+        "At a step where presence drops to 0, μ = 1 means everyone leaves."));
+    }
+  }
+  if (st.weekdayProfile[0] > 0 && !isWeekendDay(0, st.startWeekday)) {
+    msgs.push(msgHtml("warn", "Initial state differs from the profile",
+      `Everyone starts absent at 00:00 on 1 January, but the profile gives P = ${st.weekdayProfile[0]} at 00:00. ` +
+      "The first hours of the year sit slightly below the profile."));
+  }
+  $("presence-messages").innerHTML = msgs.join("");
+
+  // Convergence messages
+  const vm = runs.map((r) => {
+    const c = r.convergence;
+    const w = c.worst;
+    const worstTxt = `Largest deviation ${w.dev >= 0 ? "+" : "−"}${fmt(Math.abs(w.dev), 4)} at ${hourLabel(w.hour)}` +
+      (w.P > 0 && w.P < 1 && Number.isFinite(w.se) ? ` (${fmt(Math.abs(w.dev) / w.se, 1)} SE)` : "") + ".";
+    if (!c.canJudge) return msgHtml("note", `μ = ${fmt(r.mu, 2)}: cannot judge`, "Run at least 2 occupants to estimate the standard error.");
+    return c.ok
+      ? msgHtml("ok", `μ = ${fmt(r.mu, 2)}: converges to the profile`, `${worstTxt} No presence on weekends.`)
+      : msgHtml("error", `μ = ${fmt(r.mu, 2)}: does not converge`,
+        `Outside ${CONVERGENCE_SE} SE at ${c.failedHours.map(hourLabel).join(", ") || "–"}. Weekend hours present: ${fmt(r.stats.weekendHours)}. ${worstTxt}`);
+  }).join("");
+  $("validation-messages").innerHTML = vm;
+  renderValidationChart();
+}
+
+function setupWeekPresenceControls() {
+  const { settings: st, runs } = state.presence;
+  $("week-presence-controls").hidden = false;
+  $("week-occ").max = st.nOccupants;
+  if (Number($("week-occ").value) > st.nOccupants) $("week-occ").value = 1;
+  const sel = $("week-mu");
+  sel.innerHTML = runs.map((r, i) => `<option value="${i}">${fmt(r.mu, 2)}</option>`).join("");
+  $("week-mu-wrap").hidden = runs.length < 2;
+}
+
+function currentWeekPresence() {
+  if (!state.presence) return null;
+  const { runs, settings } = state.presence;
+  const runIdx = Math.min(Number($("week-mu").value) || 0, runs.length - 1);
+  let occ = Math.round(Number($("week-occ").value));
+  if (!Number.isFinite(occ) || occ < 1) occ = 1;
+  occ = Math.min(occ, settings.nOccupants);
+  return { schedule: runs[runIdx].schedules[occ - 1], occupant: occ, mu: runs[runIdx].mu };
+}
+
 
 /* =====================================================================
-   4. CHARTS (Chart.js)
+   6. CHARTS (Chart.js)
    ===================================================================== */
 
 const CSS = getComputedStyle(document.documentElement);
 const COLOR = {
   amber: CSS.getPropertyValue("--amber").trim(),
   blue: CSS.getPropertyValue("--blue").trim(),
+  green: CSS.getPropertyValue("--green").trim(),
   greyBar: CSS.getPropertyValue("--grey-bar").trim(),
   muted: CSS.getPropertyValue("--muted").trim(),
   faint: CSS.getPropertyValue("--faint").trim(),
   line: CSS.getPropertyValue("--line").trim(),
 };
+
+function chartsAvailable() {
+  return typeof Chart !== "undefined";
+}
 
 function referenceLines(n) {
   // Horizontal dashed lines at the preview setpoints (plain datasets, no plugin).
@@ -634,15 +1253,14 @@ function baseOptions(xTickCallback) {
   };
 }
 
-function renderCharts() {
-  if (typeof Chart === "undefined") {
+function renderIlluminanceCharts() {
+  if (!chartsAvailable()) {
     $("messages").innerHTML += msgHtml("error", "Charts unavailable",
-      "Chart.js could not be loaded from cdnjs (are you offline?). The statistics above are still correct.");
+      "Chart.js could not be loaded from cdnjs (are you offline?). The statistics are still correct.");
     return;
   }
   renderHourlyChart();
   renderDailyChart();
-  renderWeekChart();
 }
 
 function renderHourlyChart() {
@@ -694,48 +1312,107 @@ function renderDailyChart() {
   });
 }
 
-function renderWeekChart() {
-  const { startDay, endDay } = weekRange(state.week);
-  const labels = [], data = [];
-  for (let d = startDay; d <= endDay; d++) {
-    for (let h = 0; h < HOURS_PER_DAY; h++) {
-      labels.push(`${dateLabel(d)} ${hourLabel(h)}`);
-      data.push(state.values[d * HOURS_PER_DAY + h]);
-    }
-  }
-  $("week-label").textContent = `Week ${state.week} · ${dateLabel(startDay)} – ${dateLabel(endDay)}`;
-  $("week-slider").value = state.week;
-  $("week-prev").disabled = state.week <= 1;
-  $("week-next").disabled = state.week >= 53;
-
-  charts.week?.destroy();
-  const options = baseOptions(function (value, index) {
-    if (index % 24 !== 0) return "";
-    const [day, month] = this.getLabelForValue(value).split(" ");
-    // On narrow screens show only the day number; the month is in the week label above.
-    return this.chart.width < 500 ? day : `${day} ${month}`;
+function renderValidationChart() {
+  if (!chartsAvailable()) return;
+  const { settings: st, runs } = state.presence;
+  const labels = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+  const colors = SERIES_COLORS();
+  charts.validation?.destroy();
+  const options = baseOptions(function (value) {
+    return value % 3 === 0 ? this.getLabelForValue(value) : "";
   });
-  charts.week = new Chart($("chart-week"), {
-    type: "line",
+  options.scales.x.title = { display: true, text: "Hour of day (interval start)" };
+  options.scales.y = {
+    min: 0, max: 1, title: { display: true, text: "Presence probability" },
+    grid: { color: COLOR.line }, ticks: { font: { size: 11 }, callback: (v) => fmt(v, 1) },
+  };
+  options.plugins.tooltip.callbacks.title = (items) => `${hourLabel(items[0].dataIndex)}–${hourLabel(items[0].dataIndex + 1)}`;
+  options.plugins.tooltip.callbacks.label = (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y, 3)}`;
+  options.plugins.legend.labels.boxHeight = 8;
+  charts.validation = new Chart($("chart-validation"), {
+    type: "bar",
     data: {
       labels,
       datasets: [
-        { label: "Hourly illuminance", data, borderColor: COLOR.amber, backgroundColor: COLOR.amber, borderWidth: 1.5, pointRadius: 0 },
-        ...referenceLines(labels.length),
+        ...runs.map((r, i) => ({
+          type: "line", label: `Simulated, μ = ${fmt(r.mu, 2)}`, data: r.stats.hourMean,
+          borderColor: colors[i], backgroundColor: colors[i], showLine: false,
+          pointRadius: 4, pointHoverRadius: 5, pointStyle: ["circle", "rectRot", "triangle"][i],
+        })),
+        { label: "Input profile", data: st.weekdayProfile, backgroundColor: COLOR.greyBar, borderRadius: 2 },
       ],
     },
     options,
   });
 }
 
+function renderWeekChart() {
+  const hasLux = !!state.values;
+  const pres = currentWeekPresence();
+  if (!hasLux && !pres) { $("week-card").hidden = true; return; }
+  $("week-card").hidden = false;
+
+  const { startDay, endDay } = weekRange(state.week);
+  const startWeekday = state.presence ? state.presence.settings.startWeekday : Number($("start-dow").value);
+  const dayName = (d) => WEEKDAY_NAMES[dayOfWeek(d, startWeekday)];
+  $("week-label").textContent = `Week ${state.week} · ${dayName(startDay)} ${dateLabel(startDay)} – ${dayName(endDay)} ${dateLabel(endDay)}`;
+  $("week-slider").value = state.week;
+  $("week-prev").disabled = state.week <= 1;
+  $("week-next").disabled = state.week >= 53;
+  if (!chartsAvailable()) return;
+
+  const labels = [], lux = [], presence = [];
+  for (let d = startDay; d <= endDay; d++) {
+    for (let h = 0; h < HOURS_PER_DAY; h++) {
+      const i = d * HOURS_PER_DAY + h;
+      labels.push(`${dayName(d)} ${dateLabel(d)} ${hourLabel(h)}`);
+      if (hasLux) lux.push(state.values[i]);
+      if (pres) presence.push(pres.schedule[i]);
+    }
+  }
+
+  charts.week?.destroy();
+  const options = baseOptions(function (value, index) {
+    if (index % 24 !== 0) return "";
+    const [wd, day, month] = this.getLabelForValue(value).split(" ");
+    // Narrow screens: weekday only; the dates are in the week label above.
+    return this.chart.width < 500 ? wd : `${wd} ${day} ${month}`;
+  });
+  const datasets = [];
+  if (hasLux) {
+    datasets.push(
+      { label: "Hourly illuminance", data: lux, borderColor: COLOR.amber, backgroundColor: COLOR.amber, borderWidth: 1.5, pointRadius: 0 },
+      ...referenceLines(labels.length));
+  }
+  if (pres) {
+    datasets.push({
+      label: `Present (occupant ${pres.occupant}, μ = ${fmt(pres.mu, 2)})`,
+      data: presence, isPresence: true, stepped: "after", fill: "origin",
+      borderColor: "rgba(46, 91, 114, 0.6)", backgroundColor: "rgba(46, 91, 114, 0.16)",
+      borderWidth: 1, pointRadius: 0, yAxisID: hasLux ? "presence" : "y",
+    });
+  }
+  options.plugins.legend.labels.boxHeight = 8;
+  options.plugins.tooltip.callbacks.label = (ctx) => ctx.dataset.isPresence
+    ? (ctx.parsed.y ? "Present" : "Absent")
+    : `${ctx.dataset.label}: ${fmtLux(ctx.parsed.y)} lx`;
+  if (hasLux && pres) {
+    options.scales.presence = { position: "right", min: 0, max: 1, display: false };
+  } else if (!hasLux) {
+    options.scales.y = { min: 0, max: 1, grid: { color: COLOR.line }, title: { display: true, text: "Present" },
+      ticks: { stepSize: 1, font: { size: 11 }, callback: (v) => (v === 1 ? "yes" : v === 0 ? "no" : "") } };
+  }
+  charts.week = new Chart($("chart-week"), { type: "line", data: { labels, datasets }, options });
+}
+
 function setWeek(w) {
   state.week = Math.max(1, Math.min(53, w));
-  if (state.values) renderWeekChart();
+  renderWeekChart();
 }
 
 
 /* =====================================================================
-   5. EVENT WIRING
+   7. EVENT WIRING
    ===================================================================== */
 
 $("file-input").addEventListener("change", (e) => {
@@ -751,10 +1428,29 @@ dz.addEventListener("drop", (e) => handleFile(e.dataTransfer.files[0]));
 $("week-prev").addEventListener("click", () => setWeek(state.week - 1));
 $("week-next").addEventListener("click", () => setWeek(state.week + 1));
 $("week-slider").addEventListener("input", (e) => setWeek(Number(e.target.value)));
+$("week-occ").addEventListener("input", renderWeekChart);
+$("week-mu").addEventListener("change", renderWeekChart);
+
+$("profile-sveby").addEventListener("click", () => {
+  $("profile-input").value = SVEBY_OFFICE_PRESENCE.map((v) => String(v)).join(" ");
+  readProfile();
+  markStale();
+});
+$("profile-input").addEventListener("input", () => { readProfile(); markStale(); });
+document.querySelectorAll('input[name="mu-mode"]').forEach((el) => el.addEventListener("change", () => { updateMuFields(); markStale(); }));
+for (let i = 0; i < 3; i++) $(`mu-${i}`).addEventListener("input", () => { updateMuFields(); markStale(); });
+["n-occ", "seed", "start-dow"].forEach((id) => $(id).addEventListener("input", markStale));
+$("start-dow").addEventListener("change", () => { if (!state.presence) renderWeekChart(); });
+$("run-presence").addEventListener("click", runPresence);
+
+// Initial state
+$("profile-input").value = SVEBY_OFFICE_PRESENCE.map((v) => String(v)).join(" ");
+readProfile();
+updateMuFields();
 
 
 /* =====================================================================
-   6. TEST PANEL (open the page with ?test)
+   8. TEST PANEL (open the page with ?test)
    ===================================================================== */
 
 function runTests() {
@@ -776,7 +1472,7 @@ function runTests() {
     return h >= 6 && h <= 18 ? 1000 - Math.abs(h - 12) * 150 : 0;
   });
 
-  // --- Parser ---
+  // ================= Milestone 1: CSV parser and statistics =================
   test("parser: 8760 plain numbers load", () => {
     const r = parseIlluminanceCSV(rampCsv);
     assert(r.ok, r.error); eq(r.values.length, 8760); eq(r.values[23], 2300); eq(r.notes.length, 0, "notes");
@@ -830,8 +1526,6 @@ function runTests() {
     const r = parseIlluminanceCSV(rows.join("\n"));
     assert(!r.ok, "should fail"); assert(r.error.includes("Row 201"), r.error);
   });
-
-  // --- Statistics (hand-computed for the ramp year) ---
   test("summary: min 0, max 2300, mean 1150 lx", () => {
     const s = computeSummary(ramp);
     eq(s.min, 0); eq(s.max, 2300); near(s.mean, 1150);
@@ -852,16 +1546,12 @@ function runTests() {
     const v = new Array(HOURS_PER_YEAR).fill(300);
     const s = computeSummary(v); eq(s.atOrAboveYear[0], 8760); eq(s.atOrAboveYear[1], 0);
   });
-
-  // --- Profiles and daily stats ---
   test("hour-of-day profile: ramp gives h × 100", () => {
     const p = hourOfDayProfile(ramp); eq(p.length, 24); near(p[0], 0); near(p[12], 1200); near(p[23], 2300);
   });
   test("daily stats: ramp day max 2300, mean 08–17 = mean(800…1600) = 1200", () => {
     const d = dailyStats(ramp); eq(d.max.length, 365); eq(d.max[100], 2300); near(d.meanWork[100], 1200);
   });
-
-  // --- Data checks ---
   test("check: midday bell gives no warnings", () => {
     const w = checkData(computeSummary(bell), hourOfDayProfile(bell)); eq(w.length, 0, JSON.stringify(w));
   });
@@ -869,7 +1559,7 @@ function runTests() {
     const w = checkData(computeSummary(ramp), hourOfDayProfile(ramp)).filter((x) => x.kind === "timing");
     eq(w.length, 2); assert(w[0].title.includes("23:00"), w[0].title);
   });
-  test("check: bell shifted 6 h later flags the peak only", () => {
+  test("check: bell shifted 6 h later flags the peak and night light", () => {
     const shifted = bell.map((_, i) => bell[(i - 6 + HOURS_PER_YEAR) % HOURS_PER_YEAR]);
     const w = checkData(computeSummary(shifted), hourOfDayProfile(shifted));
     eq(w.length, 2, JSON.stringify(w.map((x) => x.title)));
@@ -884,8 +1574,6 @@ function runTests() {
     const z = new Array(HOURS_PER_YEAR).fill(0);
     const w = checkData(computeSummary(z), hourOfDayProfile(z)); eq(w.length, 1); assert(w[0].title.includes("0 lx"));
   });
-
-  // --- Calendar helpers ---
   test("dates: day 0 = 1 Jan, day 31 = 1 Feb, day 59 = 1 Mar, day 364 = 31 Dec", () => {
     eq(dateLabel(0), "1 Jan"); eq(dateLabel(31), "1 Feb"); eq(dateLabel(59), "1 Mar"); eq(dateLabel(364), "31 Dec");
   });
@@ -894,15 +1582,190 @@ function runTests() {
     const b = weekRange(53); eq(b.startDay, 364); eq(b.endDay, 364);
   });
 
+  // ================= Milestone 2: profile parser =================
+  test("profile: 24 tab-separated values with decimal comma (Excel row)", () => {
+    const r = parseProfile24(SVEBY_OFFICE_PRESENCE.map((v) => String(v).replace(".", ",")).join("\t"));
+    assert(r.ok, r.error); eq(r.values[8], 0.7); eq(r.values[17], 0);
+  });
+  test("profile: comma-separated line and a pasted column both parse", () => {
+    assert(parseProfile24(SVEBY_OFFICE_PRESENCE.join(",")).ok, "comma line");
+    assert(parseProfile24(SVEBY_OFFICE_PRESENCE.join("\n")).ok, "column");
+    assert(parseProfile24(SVEBY_OFFICE_PRESENCE.join(", ")).ok, "comma + space");
+  });
+  test("profile: 23 values, 1.2 and percentages are rejected", () => {
+    const r1 = parseProfile24(SVEBY_OFFICE_PRESENCE.slice(1).join(" ")); assert(!r1.ok && r1.error.includes("23"), r1.error);
+    const v = SVEBY_OFFICE_PRESENCE.slice(); v[10] = 1.2;
+    const r2 = parseProfile24(v.join(" ")); assert(!r2.ok && r2.error.includes("10:00"), r2.error);
+    const r3 = parseProfile24(SVEBY_OFFICE_PRESENCE.map((x) => x * 100).join(" ")); assert(!r3.ok && r3.error.includes("percent"), r3.error);
+  });
+
+  // ================= Milestone 2: random numbers =================
+  test("PRNG: mulberry32(12345) first three values (pinned, equal to published reference code)", () => {
+    const r = mulberry32(12345);
+    near(r(), 0.9797282677609473, 0); near(r(), 0.3067522644996643, 0); near(r(), 0.484205421525985, 0);
+  });
+  test("PRNG: 200 000 draws are uniform (mean 0.5 ± 0.002, each of 10 bins 10 % ± 0.25 %)", () => {
+    const r = mulberry32(7), n = 200000, bins = new Array(10).fill(0);
+    let s = 0;
+    for (let i = 0; i < n; i++) { const u = r(); assert(u >= 0 && u < 1, "range"); s += u; bins[Math.floor(u * 10)]++; }
+    near(s / n, 0.5, 0.002, "mean");
+    bins.forEach((b, i) => near(b / n, 0.1, 0.0025, `bin ${i}`));
+  });
+  test("PRNG: same seed gives the same sequence, different seed a different one", () => {
+    const a = mulberry32(99), b = mulberry32(99), c = mulberry32(100);
+    let same = true, diff = false;
+    for (let i = 0; i < 1000; i++) { const x = a(), y = b(), z = c(); if (x !== y) same = false; if (x !== z) diff = true; }
+    assert(same, "same seed"); assert(diff, "different seed");
+  });
+  test("streams: different for each occupant and each process", () => {
+    const seen = new Set();
+    for (let k = 0; k < 1000; k++) for (const st of [STREAM.presence, STREAM.lighting]) seen.add(streamSeed(12345, k, st));
+    eq(seen.size, 2000, "unique stream seeds");
+  });
+
+  // ================= Milestone 2: Page et al. (2008) transitions =================
+  test("Eq. 5/6 hand values: P=0.7→0.7, μ=0.3 gives T01 = 0.323077, T11 = 0.861538, not forced", () => {
+    const r = pageTransition(0.7, 0.7, 0.3);
+    near(r.T01, 0.32307692, 1e-6); near(r.T11, 0.86153846, 1e-6); assert(!r.forced, "forced");
+  });
+  test("Eq. 4 recovers μ: (T01+T10)/(T00+T11) = 0.3 for the case above", () => {
+    const r = pageTransition(0.7, 0.7, 0.3);
+    near((r.T01 + (1 - r.T11)) / ((1 - r.T01) + r.T11), 0.3, 1e-12);
+  });
+  test("forcing: P=0.7→0 (end of day), μ=0.3 → μ forced to 1, T01 = 0, T11 = 0", () => {
+    const r = pageTransition(0.7, 0, 0.3);
+    assert(r.forced, "should be forced"); near(r.muUsed, 1, 1e-12); eq(r.T01, 0); eq(r.T11, 0);
+  });
+  test("forcing up: P=0.9→0.1, μ=0.1 → μ forced to 0.8, T01 = 0, T11 = 0.1111", () => {
+    const r = pageTransition(0.9, 0.1, 0.1);
+    assert(r.forced, "should be forced"); near(r.muUsed, 0.8, 1e-12); near(r.T01, 0, 1e-12); near(r.T11, 1 / 9, 1e-12);
+  });
+  test("forcing down: P=0.2→0.9, μ=9 → μ forced to 3, T01 = 1, T11 = 0.5", () => {
+    const r = pageTransition(0.2, 0.9, 9);
+    assert(r.forced, "should be forced"); near(r.muUsed, 3, 1e-12); near(r.T01, 1, 1e-12); near(r.T11, 0.5, 1e-12);
+  });
+  test("P(t)=0 rule (ASSUMPTION): P=0→0.7 gives T01 = 0.7 (Eq. 5), T11 = 0.7, never forced", () => {
+    for (const mu of [0.05, 0.38, 1, 5]) {
+      const r = pageTransition(0, 0.7, mu); near(r.T01, 0.7, 0); near(r.T11, 0.7, 0); assert(!r.forced, `mu ${mu}`);
+    }
+  });
+  test("P(t)=1 rule (ASSUMPTION): P=1→0.4 gives T11 = 0.4 (Eq. 6), T01 = 0.4, never forced", () => {
+    for (const mu of [0.05, 0.38, 1, 5]) {
+      const r = pageTransition(1, 0.4, mu); near(r.T11, 0.4, 1e-12); near(r.T01, 0.4, 0); assert(!r.forced, `mu ${mu}`);
+    }
+  });
+  test("Eq. 2 holds and 0 ≤ T ≤ 1 for a 21 × 21 × 6 grid of P(t), P(t+1), μ", () => {
+    for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) for (const mu of [0.02, 0.1, 0.38, 1, 3, 20]) {
+      const P = i / 20, Pn = j / 20, r = pageTransition(P, Pn, mu);
+      assert(r.T01 >= 0 && r.T01 <= 1 && r.T11 >= 0 && r.T11 <= 1, `range at ${P},${Pn},${mu}`);
+      near(P * r.T11 + (1 - P) * r.T01, Pn, 1e-12, `Eq. 2 at ${P},${Pn},${mu}:`);
+      if (P > 0 && P < 1) near((r.T01 + 1 - r.T11) / (1 - r.T01 + r.T11), r.muUsed, 1e-9, `Eq. 4 at ${P},${Pn},${mu}:`);
+    }
+  });
+
+  // ================= Milestone 2: calendar =================
+  test("calendar: 1 Jan Monday → 261 weekdays, day 5 is Saturday; 1 Jan Saturday → 260 weekdays", () => {
+    eq(countWeekdays(0), 261); assert(isWeekendDay(5, 0) && isWeekendDay(6, 0) && !isWeekendDay(7, 0), "day 5–7");
+    eq(countWeekdays(5), 260); assert(isWeekendDay(0, 5), "day 0 Saturday");
+  });
+  test("calendar: Sveby annual profile sums to 0.7 × 9 × 261 = 1644.3 h", () => {
+    const P = annualPresenceProfile(SVEBY_OFFICE_PRESENCE, 0); let s = 0; for (const v of P) s += v;
+    near(s, 1644.3, 1e-9);
+  });
+
+  // ================= Milestone 2: presence simulation =================
+  const svebyRun = (mu, n, extra = {}) => runPresenceModel(Object.assign(
+    { weekdayProfile: SVEBY_OFFICE_PRESENCE, startWeekday: 0, mu, seed: 12345, nOccupants: n }, extra));
+
+  test("forcing log, Sveby, μ = 0.38: forced at 261 steps, all 16:00→17:00 with μ used 1", () => {
+    const r = svebyRun(0.38, 1);
+    eq(r.trans.forcedCount, 261); eq(r.trans.forcedGroups.length, 1); eq(r.trans.forcedGroups[0].fromHour, 16);
+    near(r.trans.forcedGroups[0].muUsed, 1, 1e-12);
+  });
+  test("simulation: absent at 00:00 1 Jan, never present outside weekdays 08:00–17:00", () => {
+    const r = svebyRun(0.38, 50);
+    for (const s of r.schedules) {
+      eq(s[0], 0, "initial");
+      for (let t = 0; t < s.length; t++) {
+        const d = Math.floor(t / 24), h = t % 24;
+        if (s[t] && (isWeekendDay(d, 0) || h < 8 || h >= 17)) throw new Error(`present at day ${d} ${hourLabel(h)}`);
+      }
+    }
+  });
+  test("simulation: same seed → identical schedules; another seed → different", () => {
+    const a = svebyRun(0.38, 5), b = svebyRun(0.38, 5), c = svebyRun(0.38, 5, { seed: 54321 });
+    for (let k = 0; k < 5; k++) assert(a.schedules[k].every((v, t) => v === b.schedules[k][t]), `occupant ${k + 1} same`);
+    assert(a.schedules.some((s, k) => s.some((v, t) => v !== c.schedules[k][t])), "different seed differs");
+  });
+  test("simulation: occupant 7 is identical whether 10 or 50 occupants are run", () => {
+    const a = svebyRun(0.38, 10), b = svebyRun(0.38, 50);
+    assert(a.schedules[6].every((v, t) => v === b.schedules[6][t]), "occupant 7");
+  });
+  test("simulation: profile 0 → never present; profile 1 for 08–17 → present exactly then", () => {
+    const zero = runPresenceModel({ weekdayProfile: new Array(24).fill(0), startWeekday: 0, mu: 0.38, seed: 1, nOccupants: 5 });
+    assert(zero.schedules.every((s) => s.every((v) => v === 0)), "zero profile");
+    const one = SVEBY_OFFICE_PRESENCE.map((v) => (v > 0 ? 1 : 0));
+    const r = runPresenceModel({ weekdayProfile: one, startWeekday: 0, mu: 0.38, seed: 1, nOccupants: 5 });
+    const P = annualPresenceProfile(one, 0);
+    assert(r.schedules.every((s) => s.every((v, t) => v === P[t])), "deterministic profile");
+  });
+  test("convergence: Sveby, μ = 0.38, 1000 occupants — every weekday hour within 4 SE, weekends 0", () => {
+    const r = svebyRun(0.38, 1000);
+    const c = r.convergence;
+    assert(c.ok, `failed hours ${c.failedHours.map(hourLabel)}; worst ${hourLabel(c.worst.hour)} dev ${c.worst.dev} se ${c.worst.se}`);
+    near(r.stats.occupied.mean, 1644.3, 4 * 6, "annual hours (≈ ±4 SE)");
+  });
+  test("convergence: varying 24 h profile 0.05→0.95 with μ = 3 (forcing inside the day), 1000 occupants", () => {
+    const prof = Array.from({ length: 24 }, (_, h) => 0.05 + 0.9 * h / 23);
+    const r = runPresenceModel({ weekdayProfile: prof, startWeekday: 0, mu: 3, seed: 777, nOccupants: 1000 });
+    assert(r.trans.forcedCount > 0, "expected forcing for μ = 3");
+    assert(r.convergence.ok, `failed hours ${r.convergence.failedHours.map(hourLabel)}; worst dev ${r.convergence.worst.dev}`);
+  });
+  test("mobility: arrivals per weekday rise with μ (0.1 < 0.38 < 1.0), Sveby, 300 occupants", () => {
+    const a = [0.1, 0.38, 1.0].map((mu) => svebyRun(mu, 300).stats.arrivalsPerWeekday);
+    assert(a[0] < a[1] && a[1] < a[2], `arrivals ${a.map((x) => x.toFixed(3))}`);
+  });
+  test("mobility: μ = 1 is memoryless — present at 09:00 given present at 08:00 ≈ 0.70", () => {
+    const r = svebyRun(1, 500);
+    let both = 0, first = 0;
+    for (const s of r.schedules) for (let d = 0; d < 365; d++) {
+      const t = d * 24 + 8;
+      if (s[t]) { first++; if (s[t + 1]) both++; }
+    }
+    near(both / first, 0.7, 0.01);
+  });
+
+  // ================= Milestone 2: 15-min orientation helper =================
+  test("μ conversion: 15-min μ 0.10, 0.20, 0.40 → hourly 0.3811, 0.6701, 0.9347, and back", () => {
+    near(muHourlyFrom15min(0.1), 0.38110, 1e-5); near(muHourlyFrom15min(0.2), 0.67010, 1e-5); near(muHourlyFrom15min(0.4), 0.93473, 1e-5);
+    near(mu15minFromHourly(muHourlyFrom15min(0.25)), 0.25, 1e-12); eq(mu15minFromHourly(1.5), null);
+  });
+  test("μ conversion matches simulation: 15-min chain read on the hour has the hourly μ persistence", () => {
+    // Constant P = 0.5 for 4000 hours. Run a 15-min chain with μ = 0.2 and read every 4th state.
+    const mu15 = 0.2, P = 0.5, r15 = pageTransition(P, P, mu15), rng = mulberry32(31);
+    let s = 0, n01 = 0, n0 = 0, n11 = 0, n1 = 0, prevHourState = 0;
+    for (let q = 1; q <= 4 * 40000; q++) {
+      s = rng() < (s ? r15.T11 : r15.T01) ? 1 : 0;
+      if (q % 4 === 0) {
+        if (q > 4) { if (prevHourState) { n1++; n11 += s; } else { n0++; n01 += s; } }
+        prevHourState = s;
+      }
+    }
+    const T01h = n01 / n0, T11h = n11 / n1, muH = (T01h + 1 - T11h) / (1 - T01h + T11h);
+    near(muH, muHourlyFrom15min(mu15), 0.03, "simulated hourly μ");
+  });
+
   return results;
 }
 
 if (new URLSearchParams(location.search).has("test")) {
+  const t0 = performance.now();
   const results = runTests();
+  const ms = performance.now() - t0;
   const passed = results.filter((r) => r.pass).length;
   $("test-panel").classList.add("visible");
   $("test-summary").innerHTML = msgHtml(passed === results.length ? "ok" : "error",
-    `${passed} / ${results.length} tests passed`, "");
+    `${passed} / ${results.length} tests passed`, `Ran in ${fmt(ms)} ms.`);
   $("test-list").innerHTML = results.map((r) =>
     `<li class="${r.pass ? "pass" : "fail"}">${r.pass ? "PASS" : "FAIL"} · ${escapeHtml(r.name)}` +
     (r.detail ? `<span class="detail">${escapeHtml(r.detail)}</span>` : "") + "</li>").join("");
