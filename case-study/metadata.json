@@ -1,0 +1,393 @@
+{
+  "tool": "Occupant Schedule Generator (milestones 1–6)",
+  "created": "2026-10-20T20:14:27.284Z",
+  "reproducibility": "Same inputs and seed give identical schedules.",
+  "illuminance_input": {
+    "file": "illuminance_4.5m.csv",
+    "crc32_of_file_text": "78611116",
+    "rows": 8760,
+    "unit": "lux",
+    "convention": "row 1 = 1 January 00:00–01:00, non-leap year, standard time without daylight saving"
+  },
+  "run": {
+    "seed": 12345,
+    "occupants": 100,
+    "mu_hourly": [
+      0.38,
+      0.67,
+      0.93
+    ],
+    "start_weekday_1_january": "Wed",
+    "weekends": "absent",
+    "time_step": "1 hour",
+    "initial_state": "absent, lights off at 00:00 on 1 January",
+    "summer_time": {
+      "rule": "EU (Directive 2000/84/EC): last Sunday of March to last Sunday of October, changes at 02:00 standard time",
+      "from": "30 Mar",
+      "to": "26 Oct",
+      "effect": "presence profile and Sveby window shifted 1 h earlier in standard time; illuminance not shifted; all files in standard time"
+    },
+    "dd_share_requested": 0.5,
+    "dd_realised": 50,
+    "user_types_by_occupant": [
+      "Di",
+      "Dd",
+      "Dd",
+      "Di",
+      "Dd",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd",
+      "Dd",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Di",
+      "Dd",
+      "Di",
+      "Dd"
+    ]
+  },
+  "presence_model": {
+    "source": "Page, Robinson, Morel & Scartezzini (2008), Energy and Buildings 40(2), 83–98, Eq. (2), (4), (5), (6)",
+    "weekday_profile_24h": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "profile_source": "Sveby (2010) Brukarindata kontor (default; user may change)",
+    "mu_note": "hourly time step, not from paper (paper used 15 minutes)",
+    "mu_forcing_log": [
+      {
+        "mu": 0.38,
+        "forced_steps": 261,
+        "of_steps": 8759,
+        "groups": [
+          {
+            "from_hour": 15,
+            "mu_used": 1,
+            "count": 150
+          },
+          {
+            "from_hour": 16,
+            "mu_used": 1,
+            "count": 111
+          }
+        ]
+      },
+      {
+        "mu": 0.67,
+        "forced_steps": 261,
+        "of_steps": 8759,
+        "groups": [
+          {
+            "from_hour": 15,
+            "mu_used": 1,
+            "count": 150
+          },
+          {
+            "from_hour": 16,
+            "mu_used": 1,
+            "count": 111
+          }
+        ]
+      },
+      {
+        "mu": 0.93,
+        "forced_steps": 261,
+        "of_steps": 8759,
+        "groups": [
+          {
+            "from_hour": 15,
+            "mu_used": 1,
+            "count": 150
+          },
+          {
+            "from_hour": 16,
+            "mu_used": 1,
+            "count": 111
+          }
+        ]
+      }
+    ]
+  },
+  "lighting_model": {
+    "algorithm": "Reinhart (2004), Solar Energy 77, 15–28, section 2.1, Fig. 2, Table 1, without blinds",
+    "arrival_Dd": {
+      "source": "Hunt (1979), Building and Environment 14, 21–33, section 5.2.4, Fig. 9(d)",
+      "equation": "P = Phi(slope * (log10 E - median))",
+      "medianLog10Lux": 1.82,
+      "slopePerLog10Lux": -2.58,
+      "phi": "erf from Abramowitz & Stegun (1964) formula 7.1.26"
+    },
+    "arrival_Di": "P = 1",
+    "intermediate_per_5min": {
+      "source": "Reinhart (2004) Fig. 3(b), reconstructed (printed formula garbled)",
+      "equation": "P5 = base + amplitude / (1 + exp(steepness * (log10 E - midLog10Lux))); P5 = 1 at E = 0",
+      "base": 0.0027,
+      "amplitude": 0.017,
+      "steepness": 64.19,
+      "midLog10Lux": 2.41,
+      "stepMinutes": 5
+    },
+    "intermediate_per_hour": "1 - (1 - P5)^12 (assumes constant illuminance within the hour)",
+    "switch_off_at_departure": {
+      "source": "Reinhart (2004) Fig. 3(c), no controls, digitised (+/- 0.003)",
+      "bins": [
+        {
+          "absence": "< 30 min",
+          "p": 0.088
+        },
+        {
+          "absence": "30–59 min",
+          "p": 0.315
+        },
+        {
+          "absence": "1–2 h",
+          "p": 0.389
+        },
+        {
+          "absence": "2–4 h",
+          "p": 0.602
+        },
+        {
+          "absence": "4–12 h",
+          "p": 0.962
+        },
+        {
+          "absence": "12–24 h",
+          "p": 0.99
+        },
+        {
+          "absence": "24 h +",
+          "p": 0.99
+        }
+      ],
+      "hourly_mapping": "absence of n whole hours uses the bin containing n, lower edge inclusive; past 31 December = 24 h +"
+    },
+    "no_switch_off_while_present": true
+  },
+  "energy": {
+    "formula": "kWh/m2/yr = lit hours * LPD (W/m2) / 1000 (on/off, no dimming)",
+    "lpd_W_m2": 10,
+    "lpd_sensitivity_W_m2": 4,
+    "floor_area_m2": 18.6,
+    "setpoint_lux": 500,
+    "fixed_case": "Sveby (2010) ch. 8: 100 % on weekdays 08:00–17:00",
+    "deterministic_case": "Sveby window with full occupancy AND E < setpoint",
+    "ideal_case": "own presence AND E < setpoint",
+    "decomposition_kWh_m2_yr": [
+      {
+        "mu": 0.38,
+        "Dd": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.058400000000001,
+          "stochastic": 6.1414,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6415999999999986,
+          "behaviour_effect": 0.0829999999999993
+        },
+        "Di": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.0363999999999995,
+          "stochastic": 18.206799999999998,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6635999999999997,
+          "behaviour_effect": 12.170399999999997
+        },
+        "All": {
+          "n": 100,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.0474,
+          "stochastic": 12.174100000000001,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6525999999999996,
+          "behaviour_effect": 6.126700000000001
+        }
+      },
+      {
+        "mu": 0.67,
+        "Dd": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.05,
+          "stochastic": 5.8898,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6499999999999995,
+          "behaviour_effect": -0.16019999999999968
+        },
+        "Di": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.043,
+          "stochastic": 19.028,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.656999999999999,
+          "behaviour_effect": 12.985
+        },
+        "All": {
+          "n": 100,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.0465,
+          "stochastic": 12.458900000000002,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6534999999999993,
+          "behaviour_effect": 6.412400000000002
+        }
+      },
+      {
+        "mu": 0.93,
+        "Dd": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.050599999999999,
+          "stochastic": 5.7867999999999995,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6494,
+          "behaviour_effect": -0.2637999999999998
+        },
+        "Di": {
+          "n": 50,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.0512,
+          "stochastic": 19.421,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.6487999999999996,
+          "behaviour_effect": 13.3698
+        },
+        "All": {
+          "n": 100,
+          "fixed": 23.49,
+          "deterministic": 8.7,
+          "ideal": 6.0509,
+          "stochastic": 12.603900000000001,
+          "daylight_effect": -14.79,
+          "presence_effect": -2.649099999999999,
+          "behaviour_effect": 6.553000000000001
+        }
+      }
+    ]
+  },
+  "assumptions": [
+    "Illuminance at a single sensor point stands in for the minimum work-plane illuminance.",
+    "Hourly time step: breaks shorter than one hour are not represented.",
+    "Weekends absent; no public holidays or long absences.",
+    "All schedules are in standard time, aligned with the illuminance file. With summer time on, office hours (presence profile, Sveby window) are 1 h earlier in standard time during EU summer time.",
+    "Each stochastic occupant is treated as controlling the lighting of the whole zone."
+  ]
+}

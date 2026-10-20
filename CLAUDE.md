@@ -18,11 +18,15 @@ Stella is a building energy and LCA specialist (MSc, Lund University). She knows
 - Must work on phone width as well as desktop.
 
 ## Code structure inside index.html
-The script is split into numbered sections: 1 constants, 2 data functions, 3 random numbers, 4 presence model (Page et al. 2008), 5 UI, 6 charts, 7 event wiring, 8 test panel. Sections 2–4 are pure functions. Model logic added in later milestones (lighting switching in M3) goes in its own pure-function section before UI. UI code may call pure functions; pure functions never touch the DOM.
+The script is split into numbered sections: 1 constants, 2 data functions, 3 random numbers, 4 presence model (Page et al. 2008), 5 lighting switching model (Reinhart 2004, Hunt 1979), 6 comparison cases, decomposition and energy, 7 export (CSV, metadata, ZIP writer), 8 UI, 9 charts, 10 event wiring, 11 test panel. Sections 2–7 are pure functions. Energy settings (setpoint, LPD, floor area) are post-processing: they update the page instantly without re-running the model. Model logic added in later milestones goes in its own pure-function section before UI. UI code may call pure functions; pure functions never touch the DOM.
 
 ## Random numbers
-- Only `mulberry32` (section 3). Each occupant has a separate stream per process: `streamSeed(seed, occupant, STREAM.presence | STREAM.lighting)`. Lighting (M3) must use `STREAM.lighting`, so that changing the lighting model never changes presence, and occupant k is the same for any N.
-- Presence draws one random number every hour, needed or not, to keep streams aligned.
+- Only `mulberry32` (section 3). Each occupant has a separate stream per process: `streamSeed(seed, occupant, STREAM.presence | STREAM.lighting | STREAM.userType)`. Changing the lighting model never changes presence, and occupant k is the same for any N.
+- Presence draws one random number every hour; lighting draws two every hour (switch-on, switch-off); user type draws one per occupant. Always drawn, needed or not, to keep streams aligned.
+- User types and lighting streams are shared across μ values, so μ comparisons differ only through presence.
+
+## Numerical helpers
+- erf: Abramowitz & Stegun (1964) formula 7.1.26, cited in the code, verified against exact erf. Any other numerical approximation must be cited the same way and tested against exact values.
 
 ## Scientific integrity rules (most important)
 - Never invent model coefficients or recall them from memory. If a coefficient is missing, stop and ask Stella for the value from the paper.
@@ -49,6 +53,16 @@ The script is split into numbered sections: 1 constants, 2 data functions, 3 ran
 - After each milestone: add or run the tests in section 8 and the `?test` panel, then commit with a clear message.
 - When something breaks, explain the cause in one or two sentences before fixing it.
 - Do not rewrite working code unless asked.
+
+## Time convention
+- All files in standard time (UTC+1). With EU summer time on (default), the presence profile and the Sveby window follow clock time, i.e. 1 h earlier in standard time from the last Sunday of March to the last Sunday of October (`summerTimeRange`, `clockIndex`). Illuminance is never shifted. Presence validation and hour-of-day charts are in clock time.
+
+## Daylight input (case study)
+- `daylight/simulate_reinhart_office.py` (honeybee-radiance + Radiance 6.0a via pyradiance) produces the case-study illuminance. Model set-up and checks are in `daylight/README.md` and `daylight/output/daylight_metadata.json`. Do not tune the geometry to hit a target daylight factor; report gaps instead.
+
+## Export
+- No ZIP library: `makeZip` writes stored entries per PKWARE APPNOTE with CRC-32. Any change must keep the ZIP round-trip test passing and be checked once with an external reader (Python `zipfile`).
+- Every export carries `metadata.json` with seed, settings, coefficients with sources, assumptions and the input file's CRC-32.
 
 ## Outputs
 - Schedule CSVs as defined in PROJECT_SPEC.md section 6: per occupant a lighting (0/1) and an occupancy (0/1) schedule, 8760 rows, one column per occupant, for EnergyPlus/Honeybee, IES VE and IDA ICE. The optional averaged fractional schedule must always be labelled as an average.

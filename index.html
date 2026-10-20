@@ -107,6 +107,15 @@
   button.secondary { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
   button.primary { border: 0; background: var(--ink); color: #fff; width: 100%; font-weight: 600; margin-top: 4px; }
   button.primary:hover { background: #33403c; }
+  .field.check input { width: 20px; height: 20px; accent-color: var(--amber); }
+  .headline { font-size: 17px; line-height: 1.45; margin: 4px 0 14px; padding: 12px 14px; background: #faf7ef; border-radius: 8px; }
+  .headline strong { font-variant-numeric: tabular-nums; }
+  .headline small { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  details.model-details { font-size: 13px; margin-top: 4px; }
+  details.model-details summary { cursor: pointer; color: var(--muted); }
+  details.model-details table.stats { font-size: 12px; margin-top: 6px; }
+  details.model-details table.stats td:last-child { white-space: normal; }
+  table.results tr.group-start td { border-top: 1px solid var(--line); }
   .seg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; margin-bottom: 10px; }
   .seg label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
   .tag { display: inline-block; font-size: 11px; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; white-space: nowrap; }
@@ -154,7 +163,9 @@
 
   /* Charts */
   .chart-box { position: relative; height: 280px; }
-  @media (max-width: 520px) { .chart-box { height: 230px; } }
+  .chart-box.tall { height: 340px; }
+  @media (max-width: 520px) { .chart-box { height: 230px; } .chart-box.tall { height: 300px; } }
+  button.primary:disabled { background: var(--grey-bar); cursor: default; }
   .week-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .week-controls button {
     font: inherit; font-size: 14px; padding: 4px 12px; border: 1px solid var(--line);
@@ -166,6 +177,13 @@
   .week-presence { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 10px; align-items: center; }
   .week-presence input, .week-presence select { font: inherit; font-size: 16px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; width: 84px; background: var(--surface); }
 
+  section.method { padding: 0 16px 24px; }
+  section.method details { border-top: 1px solid var(--line); padding: 10px 0; }
+  section.method summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  section.method p, section.method li { font-size: 14px; max-width: 80ch; }
+  section.method ul, section.method ol { padding-left: 20px; }
+  section.method ul.refs li { margin-bottom: 4px; }
+  .milestone-tag a { color: inherit; }
   footer.site { padding: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 
   /* Test panel (?test) */
@@ -183,7 +201,7 @@
   <div class="wrap">
     <h1>Occupant Schedule Generator</h1>
     <p>Turns annual work-plane illuminance into stochastic occupant lighting schedules using published behaviour models, and compares them with a fixed standard schedule.</p>
-    <span class="milestone-tag">Milestone 2 · seeded random numbers and presence model</span>
+    <span class="milestone-tag">Version 1.0 · <a href="#method">method, sources and limitations</a></span>
   </div>
 </header>
 
@@ -233,24 +251,57 @@
       </div>
 
       <div class="card">
-        <h2>4. Run settings</h2>
+        <h2>4. Lighting switching</h2>
+        <p class="hint">Lightswitch-2002 (Reinhart 2004) without blinds, for private or two-person offices. Needs the illuminance CSV; the sensor value stands in for the minimum work-plane illuminance.</p>
+        <label class="field"><span>Share of Dd users (%)<small>Dd considers daylight · Di always switches on at arrival</small></span><input type="number" id="share-dd" min="0" max="100" step="1" value="50"></label>
+        <details class="model-details">
+          <summary>Model inputs from the papers</summary>
+          <table class="stats">
+            <tr><td>Arrival, Dd: Hunt (1979) Fig. 9(d)</td><td>P = Φ(−2.58·(log₁₀E − 1.82))</td></tr>
+            <tr><td>Arrival, Di: Reinhart (2004) Fig. 3(a)</td><td>P = 1</td></tr>
+            <tr><td>While present, per 5 min: Reinhart Fig. 3(b)</td><td>0.0027 + 0.017 / (1 + e<sup>64.19·(log₁₀E − 2.41)</sup>)</td></tr>
+            <tr><td>While present, per hour</td><td>1 − (1 − P₅)¹²</td></tr>
+          </table>
+          <table class="stats" id="switch-off-table" style="margin-top:8px"></table>
+          <p class="footnote">Switch-off at departure: Reinhart (2004) Fig. 3(c), "no controls", by length of the coming absence. No switch-off while present.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>5. Run settings</h2>
         <label class="field"><span>Occupants</span><input type="number" id="n-occ" min="1" max="1000" step="1" value="100"></label>
         <label class="field"><span>Random seed</span><input type="number" id="seed" min="0" max="4294967295" step="1" value="12345"></label>
         <label class="field"><span>1 January is a</span>
           <select id="start-dow">
-            <option value="0" selected>Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+            <option value="0">Monday</option><option value="1">Tuesday</option><option value="2" selected>Wednesday</option>
             <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
           </select>
         </label>
-        <p class="footnote" style="margin-top:0">Match "Day of Week for Start Day" in your IDF RunPeriod. Monday is a placeholder until you confirm it.</p>
-        <button type="button" class="primary" id="run-presence">Run presence model</button>
+        <p class="footnote" style="margin-top:0">Must match "Day of Week for Start Day" in the IDF RunPeriod. Default Wednesday, from Stella's simulation.</p>
+        <label class="field check"><span>EU summer time<small>Office hours follow the clock: 1 h earlier in standard time from the last Sunday of March to the last Sunday of October. All files stay in standard time.</small></span><input type="checkbox" id="summer-time" checked></label>
+        <button type="button" class="primary" id="run-presence">Run model</button>
         <div class="file-status" id="run-status"></div>
       </div>
 
-      <div class="card placeholder"><h3 data-milestone="M3">Switching models</h3><p>Coefficients from the original papers, entered and verified by you.</p></div>
-      <div class="card placeholder"><h3 data-milestone="M5">Lighting settings</h3><p>Setpoint, LPD (W/m²), floor area.</p></div>
-      <div class="card placeholder"><h3 data-milestone="M5">Fixed schedule</h3><p>Sveby: lights on 100 % weekdays 08:00–17:00, 7.6 W/m².</p></div>
-      <div class="card placeholder"><h3 data-milestone="M6">Export</h3><p>Lighting and occupancy schedules, summary and metadata.</p></div>
+      <div class="card">
+        <h2>6. Energy and comparison</h2>
+        <p class="hint">Updates instantly, no re-run needed. <strong>kWh/m²·yr = lit hours × LPD (W/m²) ÷ 1000.</strong></p>
+        <label class="field"><span>Setpoint, deterministic case<small>500 lx: EN 12464-1 desk work · 300 lx: Sveby Table 8.1, low end</small></span>
+          <select id="setpoint"><option value="500" selected>500 lx</option><option value="300">300 lx</option></select>
+        </label>
+        <label class="field"><span>LPD (W/m²)<small>Sveby Table 8.1, cell office: 10</small></span><input type="number" id="lpd" min="0.1" step="0.1" value="10"></label>
+        <label class="field check"><span>Also show 4 W/m²<small>Sveby Table B3.4, efficient/LED office rooms</small></span><input type="checkbox" id="lpd-led"></label>
+        <label class="field"><span>Floor area (m²)<small>Reinhart (2004) office, 3.05 × 6.1 m</small></span><input type="number" id="area" min="0.1" step="0.1" value="18.6"></label>
+        <div class="file-status" id="energy-status"></div>
+        <p class="footnote">The same LPD is used for all three cases, so the comparison isolates behaviour. Fixed case: Sveby (2010) ch. 8, lights on 100 % on weekdays 08:00–17:00 regardless of daylight or presence.</p>
+      </div>
+      <div class="card">
+        <h2>7. Export</h2>
+        <p class="hint">Per occupant: lighting (0/1) and occupancy (0/1), 8760 rows, one column per occupant, one file per μ. For EnergyPlus/Honeybee <code>Schedule:File</code>, IES VE and IDA ICE. Includes summaries and a metadata file with every coefficient, setting and assumption.</p>
+        <label class="field check"><span>Include averaged fractional schedules<small>Labelled AVERAGE; for multi-occupant zones only</small></span><input type="checkbox" id="export-avg"></label>
+        <button type="button" class="primary" id="export-zip" disabled>Download all (.zip)</button>
+        <div class="file-status" id="export-status">Run the model first.</div>
+      </div>
     </aside>
 
     <!-- ===== Results ===== -->
@@ -289,6 +340,30 @@
         </div>
       </div>
 
+      <div id="energy-results" hidden>
+        <div class="card">
+          <h2>Lighting energy: four cases</h2>
+          <div class="headline" id="energy-headline"></div>
+          <div class="table-scroll"><table class="results" id="energy-table"></table></div>
+          <p class="footnote" id="energy-footnote"></p>
+        </div>
+
+        <div class="card">
+          <h2>From standard schedule to real behaviour</h2>
+          <p class="hint">Four-step decomposition in kWh/m²·yr: (1) fixed Sveby schedule → (2) deterministic, full occupancy: <em>daylight effect</em> → (3) ideal switching on each occupant's own presence: <em>presence effect</em> → (4) stochastic Dd/Di: <em>behaviour effect</em>. Steps 3–4 are means per user type.</p>
+          <div class="week-presence" id="chart-mu-wrap" hidden><label>μ for the charts <select id="chart-mu"></select></label></div>
+          <div class="chart-box tall"><canvas id="chart-waterfall"></canvas></div>
+          <div class="table-scroll" style="margin-top:12px"><table class="results" id="decomp-table"></table></div>
+          <p class="footnote">Steps are applied in this order; a different order would attribute the interactions differently. Ideal switching: lights on exactly when the occupant is present and the illuminance is below the setpoint.</p>
+        </div>
+
+        <div class="card">
+          <h2>Distribution over stochastic occupants</h2>
+          <p class="hint">Each bar counts occupants whose annual lighting energy falls in that range, stacked by user type. Dashed lines mark the fixed, deterministic and ideal cases.</p>
+          <div class="chart-box"><canvas id="chart-hist"></canvas></div>
+        </div>
+      </div>
+
       <div id="presence-results" hidden>
         <div class="card">
           <h2>Presence model results</h2>
@@ -306,6 +381,23 @@
         </div>
       </div>
 
+      <div id="lighting-results" hidden>
+        <div class="card">
+          <h2>Lighting results</h2>
+          <p class="hint" id="lighting-meta"></p>
+          <div class="table-scroll"><table class="results" id="lighting-table"></table></div>
+          <p class="footnote" id="lighting-footnote"></p>
+          <div id="lighting-messages" style="margin-top:12px"></div>
+        </div>
+
+        <div class="card">
+          <h2>Weekday lighting profile</h2>
+          <p class="hint">Share of occupants with lights on, by hour of day, on weekdays. Grey bars: share present. Compare with Reinhart (2004) Fig. 6(c).</p>
+          <div class="week-presence" id="profile-mu-wrap" hidden><label>μ <select id="profile-mu"></select></label></div>
+          <div class="chart-box"><canvas id="chart-lighting"></canvas></div>
+        </div>
+      </div>
+
       <div class="card" id="week-card" hidden>
         <h2>One week, hour by hour</h2>
         <div class="week-controls">
@@ -317,13 +409,104 @@
         <div class="week-presence" id="week-presence-controls" hidden>
           <label>Occupant <input type="number" id="week-occ" min="1" value="1"></label>
           <label id="week-mu-wrap">μ <select id="week-mu"></select></label>
-          <span>Shaded hours: occupant present.</span>
+          <span id="week-legend-note">Blue: occupant present. Yellow (lower half): lights on.</span><span>Times in standard time.</span>
         </div>
         <div class="chart-box"><canvas id="chart-week"></canvas></div>
       </div>
     </section>
   </main>
 </div>
+
+<section class="wrap method" id="method">
+  <div class="card">
+    <h2>Method, sources and limitations</h2>
+    <p class="hint">Version 1.0. Behaviour comes only from published, cited models running on one seeded random number generator: the same inputs and seed give identical results. AI was used to build the tool, not to invent behaviour.</p>
+
+    <details open>
+      <summary>1. What the tool compares</summary>
+      <p>Four cases for one office zone, all on/off lighting with the same lighting power density (LPD), so the comparison isolates behaviour. Annual lighting energy (kWh/m²·yr) = lit hours × LPD (W/m²) ÷ 1000.</p>
+      <ol>
+        <li><strong>Fixed schedule</strong> (Sveby 2010, ch. 8): lights on 100 % on weekdays 08:00–17:00, regardless of daylight or presence.</li>
+        <li><strong>Deterministic threshold</strong>: the same window with full occupancy, lights on when the work-plane illuminance is below the setpoint (500 lx, EN 12464-1; 300 lx option).</li>
+        <li><strong>Ideal switching</strong>: lights on exactly when the stochastic occupant is present and the illuminance is below the setpoint.</li>
+        <li><strong>Stochastic</strong>: stochastic presence and stochastic manual switching (below).</li>
+      </ol>
+      <p>Read in this order, the steps separate a <em>daylight effect</em> (1→2), a <em>presence effect</em> (2→3) and a <em>behaviour effect</em> (3→4). The steps are sequential: a different order would split the interactions differently.</p>
+    </details>
+
+    <details>
+      <summary>2. Presence model</summary>
+      <p>Inhomogeneous Markov chain of Page et al. (2008), Eq. (2), (4), (5), (6), driven by a 24-hour weekday presence profile (default Sveby 2010, <em>Brukarindata kontor</em>: P = 0.70 from 08:00 to 17:00) and a mobility parameter μ. When the input μ would give a transition probability outside 0–1, μ is moved to the closest valid value for that hour step, as in the paper, and the tool logs where. At P(t) = 0 or 1 the transition out of a state that cannot occur is set to P(t+1) (assumption; the paper does not cover it). Occupants start absent at 00:00 on 1 January; weekends are absent.</p>
+      <p><strong>Time step and μ.</strong> The tool runs hourly; the paper used 15 minutes and gives no numeric μ values. μ is therefore a user input labelled "hourly time step, not from paper", run as a sensitivity (defaults 0.38, 0.67, 0.93, equal in hour-to-hour persistence to 15-minute μ of 0.10, 0.20, 0.40 where P is constant).</p>
+    </details>
+
+    <details>
+      <summary>3. Lighting switching model</summary>
+      <p>Lightswitch-2002 algorithm of Reinhart (2004, section 2.1, Fig. 2, Table 1) without blinds, evaluated hourly:</p>
+      <ul>
+        <li><strong>Arrival</strong> with lights off: users who consider daylight (Dd) switch on with Hunt's (1979) probit line, P = Φ(−2.58·(log₁₀E − 1.82)), section 5.2.4 and Fig. 9(d) (n = 213, r = −0.82), on the minimum work-plane illuminance; users who ignore daylight (Di) always switch on. Φ uses the error-function approximation of Abramowitz &amp; Stegun (1964), formula 7.1.26.</li>
+        <li><strong>While present</strong> with lights off: intermediate switch-on, Reinhart (2004) Fig. 3(b). The printed formula is garbled; the tool uses P₅ = 0.0027 + 0.017 / (1 + e<sup>64.19·(log₁₀E − 2.41)</sup>) per 5 minutes, which reproduces the plotted curve, converted to hourly as 1 − (1 − P₅)¹².</li>
+        <li><strong>No switch-off while present</strong> (section 2.4).</li>
+        <li><strong>Departure</strong> with lights on: switch off with Reinhart (2004) Fig. 3(c), "no controls" (from Pigg et al. 1996), by the length of the coming absence, which the presence series provides. Lights not switched off stay on through the absence.</li>
+      </ul>
+      <p>The Dd/Di share is an input (default 50 %, Reinhart's equal shares); real buildings are often polarised.</p>
+    </details>
+
+    <details>
+      <summary>4. Time convention</summary>
+      <p>All files are in standard time (UTC+1), including the illuminance. During EU summer time (last Sunday of March to last Sunday of October) office hours follow the clock, so the presence profile and the Sveby window move one hour earlier in standard time (08:00–17:00 clock = 07:00–16:00 standard). Reinhart (2004, section 3.1) also applied daylight saving time to occupancy. In EnergyPlus, use <code>Adjust Schedule for Daylight Savings = No</code>.</p>
+    </details>
+
+    <details open>
+      <summary>5. Case study: Reinhart reference office in Malmö</summary>
+      <p><strong>Daylight input.</strong> Annual hourly illuminance simulated with honeybee-radiance and Radiance 6.0a for the Reinhart (2004) reference office (section 3.1, Fig. 5): 3.05 × 6.1 × 2.74 m, facing south, no obstructions; reflectances 80/50/20 % (ceiling/walls/floor); double low-e glazing, visual transmittance 72 %; window digitised from Fig. 5(a) (4.58 m² of glass); no blinds, no furniture. Malmö TMYx weather. Two-phase daylight coefficients with an exact sun, Perez sky (Perez et al. 1993). Sensor on the room centre line, 0.8 m high, 4.5 m from the window: daylit mean 697 lx, daylight factor 1.4 %.</p>
+      <p><strong>Daylight-factor check.</strong> At 1.5 m from the window the model gives 8.5 %, against 11 % in Reinhart (2004). Ruled out: the glass (Radiance transmits exactly 0.72 at normal incidence) and convergence (8.55–8.58 % from 6 to 12 ambient bounces; an independent rtrace run gives 8.5 %). Only a frameless pane from sill to ceiling reaches 11 %, which contradicts Fig. 5(a). The window is kept as drawn and the gap is reported.</p>
+      <p><strong>Result</strong> (100 occupants, seed 12345, 50 % Dd, μ = 0.38, 500 lx, 10 W/m², 1 January a Wednesday, summer time on):</p>
+      <div class="table-scroll"><table class="results">
+        <thead><tr><th>kWh/m²·yr</th><th>Fixed</th><th>Daylight effect</th><th>Presence effect</th><th>Behaviour effect</th><th>Stochastic</th></tr></thead>
+        <tbody>
+          <tr><td>Dd users</td><td>23.5</td><td>−14.8</td><td>−2.6</td><td>+0.1</td><td><strong>6.1</strong></td></tr>
+          <tr><td>Di users</td><td>23.5</td><td>−14.8</td><td>−2.7</td><td>+12.2</td><td><strong>18.2</strong></td></tr>
+        </tbody>
+      </table></div>
+      <p><strong>Finding.</strong> At a realistic desk, occupants who use daylight behave close to ideal switching (6.1 against 6.0 kWh/m²·yr), and nearly the whole behaviour effect (99 %) comes from occupants who ignore daylight. For Dd users "close to ideal" is a net result of two opposite effects: lights left on through some absences and never switched off while present (more energy), and dim hours tolerated without switching on (less energy). At μ = 0.67 and 0.93 the second wins and Dd users use slightly less than ideal switching (5.9 and 5.8). The Dd/Di share therefore matters more than the mean: report the two groups, not the average of both.</p>
+      <p><strong>Outliers are genuine.</strong> Lights left on at a departure stay on until a later departure where they are switched off. Before an absence of 12 h or more the switch-off probability is 0.990, so about 1 in 100 departures made with the lights on before a night or weekend leaves them on, for up to 63 h over a weekend. In the case study 33 of 100 occupants do this at least once a year, and the occupant with the most lit-while-absent hours has 354 h (144 on weekends). These rare, long episodes form the upper tail of the distribution.</p>
+      <p><strong>Plausibility, not validation.</strong> Reinhart's DdBd user in Toronto used 9.6 kWh/m²·yr at 15 W/m² (Eq. 1), about 6.4 at 10 W/m², against 6.1 here (different climate, presence and blinds). Measured lighting use in Swedish offices of about 65 % of the time, dropping toward 30 % in summer (Jagemar 2004, in Sveby Bilaga 2), is far below the fixed schedule's 100 %.</p>
+    </details>
+
+    <details>
+      <summary>6. Limitations</summary>
+      <ul>
+        <li>Private or two-person offices only (Reinhart 2004); not open-plan offices.</li>
+        <li>Hourly time step: breaks under one hour are invisible, so the two shortest switch-off bins are never used; the hourly intermediate probability assumes constant illuminance within the hour.</li>
+        <li>μ is a sensitivity input, not a value from the paper.</li>
+        <li>Hunt's (1979) data came from UK multi-person offices and classrooms, with illuminance estimated from external data and daylight factors; Reinhart (2004) adopted the curve for private offices. Hunt writes "less than 1 %" at 500 lux; the probit equation gives 1.2 %.</li>
+        <li>Reinhart (2004) Fig. 3(b): Table 1 says the intermediate probability rises "from 0.5 % to 2 %"; the formula and plot give 0.27 % to 1.97 %.</li>
+        <li>One sensor point stands in for the minimum work-plane illuminance.</li>
+        <li>No blinds, no long absences (holidays, sick leave) and no public holidays. The Swedish July holiday falls in high-daylight months, so its effect on lighting energy is small.</li>
+        <li>Each stochastic occupant is treated as controlling the lighting of the whole zone; on/off lighting without dimming.</li>
+        <li>Daylight input is simulated, not measured (section 5). Schedule import is tested in EnergyPlus 25.2.0 (exact match, with and without daylight saving in the model); Honeybee, IES VE and IDA ICE are expected to work but not yet tested.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>7. References</summary>
+      <ul class="refs">
+        <li>Abramowitz, M., Stegun, I.A. (1964). <em>Handbook of Mathematical Functions</em>, formula 7.1.26.</li>
+        <li>EN 12464-1. Light and lighting — Lighting of work places — Part 1: Indoor work places.</li>
+        <li>European Parliament and Council (2001). Directive 2000/84/EC on summer-time arrangements.</li>
+        <li>Hunt, D.R.G. (1979). The use of artificial lighting in relation to daylight levels and occupancy. <em>Building and Environment</em> 14, 21–33.</li>
+        <li>Jagemar, L. (2004), as reported in Sveby, <em>Brukarindata kontor</em>, Bilaga 2.</li>
+        <li>Page, J., Robinson, D., Morel, N., Scartezzini, J.-L. (2008). A generalised stochastic model for the simulation of occupant presence. <em>Energy and Buildings</em> 40(2), 83–98.</li>
+        <li>Perez, R., Seals, R., Michalsky, J. (1993). All-weather model for sky luminance distribution — preliminary configuration and validation. <em>Solar Energy</em> 50(3), 235–245.</li>
+        <li>Pigg, S., Eilers, M., Reed, J. (1996). Behavioral aspects of lighting and occupancy sensors in private offices: a case study of a university office building. <em>Proceedings of the 1996 ACEEE Summer Study on Energy Efficiency in Buildings</em>.</li>
+        <li>Reinhart, C.F. (2004). Lightswitch-2002: a model for manual and automated control of electric lighting and blinds. <em>Solar Energy</em> 77, 15–28.</li>
+        <li>Sveby (2010). <em>Brukarindata kontor</em> (presence profile, fixed lighting schedule, LPD Tables 8.1 and B3.4).</li>
+        <li>Software: Radiance 6.0a (LBNL), honeybee-radiance (Ladybug Tools), pyradiance; Chart.js 4.4.1.</li>
+      </ul>
+    </details>
+  </div>
+</section>
 
 <footer class="site">
   <div class="wrap">Occupant Schedule Generator · behaviour comes only from published, cited models · same inputs and seed give identical results.</div>
@@ -677,7 +860,7 @@ function fmix32(h) {
 // Each occupant gets separate random streams per process, so that e.g. changing
 // the lighting model (milestone 3) never changes anyone's presence, and occupant k
 // behaves the same whether 10 or 1000 occupants are simulated.
-const STREAM = { presence: 1, lighting: 2 };
+const STREAM = { presence: 1, lighting: 2, userType: 3 };
 
 /** Seed for (run seed, occupant index 0-based, stream id). */
 function streamSeed(seed, occupant, stream) {
@@ -707,12 +890,43 @@ function countWeekdays(startWeekday) {
   return n;
 }
 
-/** 8760 hourly presence probabilities: weekday profile on Mon–Fri, 0 on Sat–Sun (v1). */
-function annualPresenceProfile(weekdayProfile, startWeekday) {
+/*
+ * EU summer time (Directive 2000/84/EC): from 01:00 UTC on the last Sunday of March to 01:00 UTC
+ * on the last Sunday of October. In Swedish standard time (CET, UTC+1) both changes fall at 02:00
+ * standard time. All files stay in standard time (decision 2026-10-20); during summer time the
+ * occupants' clock-time habits (presence profile, Sveby working window) move one hour earlier in
+ * standard time, e.g. 08:00–17:00 clock = 07:00–16:00 standard. Illuminance is not shifted.
+ * Reinhart (2004, section 3.1) also applied daylight saving time to occupancy.
+ */
+const MONTH_START_DAY = MONTHS.reduce((acc, [, len], i) => (acc.push(i === 0 ? 0 : acc[i - 1] + MONTHS[i - 1][1]), acc), []);
+
+/** Day index (0-based) of the last Sunday of a month (0 = January). */
+function lastSundayDayIndex(month, startWeekday) {
+  let d = MONTH_START_DAY[month] + MONTHS[month][1] - 1;
+  while (dayOfWeek(d, startWeekday) !== 6) d--;
+  return d;
+}
+
+/** Summer-time period in standard-time hour indices [startHour, endHour). */
+function summerTimeRange(startWeekday) {
+  const startDay = lastSundayDayIndex(2, startWeekday), endDay = lastSundayDayIndex(9, startWeekday);
+  return { startDay, endDay, startHour: startDay * HOURS_PER_DAY + 2, endHour: endDay * HOURS_PER_DAY + 2 };
+}
+
+/** Clock-time hour index for standard-time hour t (t + 1 during summer time). dst = null: no summer time. */
+function clockIndex(t, dst) {
+  return dst && t >= dst.startHour && t < dst.endHour ? t + 1 : t;
+}
+
+/**
+ * 8760 hourly presence probabilities in standard time: the weekday profile (clock time) on
+ * Mon–Fri, 0 on Sat–Sun (v1). With summer time, hour t uses the profile at its clock time.
+ */
+function annualPresenceProfile(weekdayProfile, startWeekday, dst = null) {
   const P = new Float64Array(HOURS_PER_YEAR);
-  for (let d = 0; d < DAYS_PER_YEAR; d++) {
-    if (isWeekendDay(d, startWeekday)) continue;
-    for (let h = 0; h < HOURS_PER_DAY; h++) P[d * HOURS_PER_DAY + h] = weekdayProfile[h];
+  for (let t = 0; t < HOURS_PER_YEAR; t++) {
+    const c = clockIndex(t, dst);
+    if (!isWeekendDay(Math.floor(c / HOURS_PER_DAY), startWeekday)) P[t] = weekdayProfile[c % HOURS_PER_DAY];
   }
   return P;
 }
@@ -822,8 +1036,8 @@ function simulatePresence(trans, rng) {
   return s;
 }
 
-/** Summary statistics for a set of presence schedules. */
-function presenceStats(schedules, Pyear, startWeekday) {
+/** Summary statistics for a set of presence schedules. Hour-of-day results are in clock time. */
+function presenceStats(schedules, Pyear, startWeekday, dst = null) {
   const N = schedules.length;
   const weekdays = countWeekdays(startWeekday);
   const occHours = new Array(N);
@@ -839,9 +1053,9 @@ function presenceStats(schedules, Pyear, startWeekday) {
       if (v && !prev) totalArrivals++;
       prev = v;
       if (v) {
-        const d = Math.floor(t / HOURS_PER_DAY);
-        if (isWeekendDay(d, startWeekday)) weekendHours++;
-        else hourCounts[t % HOURS_PER_DAY][k]++;
+        const c = clockIndex(t, dst);
+        if (isWeekendDay(Math.floor(c / HOURS_PER_DAY), startWeekday)) weekendHours++;
+        else hourCounts[c % HOURS_PER_DAY][k]++;
       }
     }
     occHours[k] = occ;
@@ -902,16 +1116,16 @@ function checkConvergence(profile24, stats, k = CONVERGENCE_SE) {
   };
 }
 
-/** Run the presence model for N occupants with one μ. */
-function runPresenceModel({ weekdayProfile, startWeekday, mu, seed, nOccupants }) {
-  const Pyear = annualPresenceProfile(weekdayProfile, startWeekday);
+/** Run the presence model for N occupants with one μ (dst: summer-time range or null). */
+function runPresenceModel({ weekdayProfile, startWeekday, mu, seed, nOccupants, dst = null }) {
+  const Pyear = annualPresenceProfile(weekdayProfile, startWeekday, dst);
   const trans = buildTransitions(Pyear, mu);
   const schedules = [];
   for (let k = 0; k < nOccupants; k++) {
     const rng = mulberry32(streamSeed(seed, k, STREAM.presence));
     schedules.push(simulatePresence(trans, rng));
   }
-  const stats = presenceStats(schedules, Pyear, startWeekday);
+  const stats = presenceStats(schedules, Pyear, startWeekday, dst);
   return { mu, trans, schedules, stats, convergence: checkConvergence(weekdayProfile, stats) };
 }
 
@@ -931,7 +1145,490 @@ function mu15minFromHourly(muH) {
 
 
 /* =====================================================================
-   5. UI
+   5. LIGHTING SWITCHING MODEL — Lightswitch-2002: Reinhart (2004),
+      "Lightswitch-2002: a model for manual and automated control of electric
+      lighting and blinds", Solar Energy 77, 15–28; section 2.1, Fig. 2, Table 1.
+      Blinds are out of scope in v1. Arrival curve from Hunt (1979), "The use of
+      artificial lighting in relation to daylight levels and occupancy",
+      Building and Environment 14, 21–33.
+   ===================================================================== */
+
+/**
+ * Error function, Abramowitz & Stegun (1964), Handbook of Mathematical Functions,
+ * formula 7.1.26: |error| ≤ 1.5 × 10⁻⁷ (checked against the exact erf: max 1.4 × 10⁻⁷
+ * on [−6, 6]). JavaScript has no built-in erf.
+ */
+function erf(x) {
+  const sign = x < 0 ? -1 : 1;
+  const ax = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * ax);
+  const poly = ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t;
+  return sign * (1 - poly * Math.exp(-ax * ax));
+}
+
+/** Standard normal cumulative distribution Φ(z) = ½·(1 + erf(z / √2)). */
+function normalCdf(z) {
+  return 0.5 * (1 + erf(z / Math.SQRT2));
+}
+
+// Hunt (1979), section 5.2.4 and Fig. 9(d): probit line through the pooled data
+// (n = 213, r = −0.82, χ² = 107). Predictor: minimum working-plane illuminance.
+// Median 1.82 log₁₀ lux (≈ 67 lx), slope −2.58 per log₁₀ lux.
+const HUNT_1979 = { medianLog10Lux: 1.82, slopePerLog10Lux: -2.58 };
+
+/**
+ * Switch-on probability at arrival for a user who considers daylight (Dd).
+ * Hunt (1979) Fig. 9(d): P = Φ(slope · (log₁₀E − median)); adopted by Reinhart (2004) Fig. 3(a).
+ * P = 1 at E = 0 (log undefined; Reinhart Fig. 3(a) starts at 1).
+ */
+function pArrivalSwitchOn(E) {
+  if (E <= 0) return 1;
+  return normalCdf(HUNT_1979.slopePerLog10Lux * (Math.log10(E) - HUNT_1979.medianLog10Lux));
+}
+
+// Reinhart (2004), Fig. 3(b): intermediate (within-day) switch-on probability per 5-min step.
+// The printed formula is garbled: "0.0027+0.017/{-64.19(log10Emin-2.41}" (no exp, no "1+",
+// unclosed bracket). Reconstructed as the logistic below, which reproduces the plotted curve:
+// plateaus 0.0197 and 0.0027, mid-point at 10^2.41 = 257 lx (checked by digitising the figure,
+// 2026-10-20). With the printed minus sign the curve would be inverted (more switching in
+// bright light), contradicting the plot and Table 1 (iii).
+// Note: Table 1 (iii) says "from 0.5% to 2%"; formula and plot give 0.27% to 1.97%.
+// P = 1 at E = 0 ("1 for Emin = 0" in Fig. 3(b); Table 1 (iii)).
+const REINHART_FIG3B = { base: 0.0027, amplitude: 0.017, steepness: 64.19, midLog10Lux: 2.41, stepMinutes: 5 };
+
+function pIntermediate5min(E) {
+  if (E <= 0) return 1;
+  const k = REINHART_FIG3B;
+  return k.base + k.amplitude / (1 + Math.exp(k.steepness * (Math.log10(E) - k.midLog10Lux)));
+}
+
+// ASSUMPTION: hourly intermediate probability = 1 − (1 − P₅)^12, i.e. twelve independent
+// 5-minute chances in the hour with the illuminance constant within the hour.
+const STEPS_PER_HOUR = 60 / REINHART_FIG3B.stepMinutes; // 12
+
+function pIntermediateHourly(E) {
+  return 1 - Math.pow(1 - pIntermediate5min(E), STEPS_PER_HOUR);
+}
+
+// Reinhart (2004), Fig. 3(c), "no controls" bars (from Pigg, Eilers & Reed 1996): probability of
+// switching the lights off at departure, by length of the coming absence. Digitised from the
+// figure at 400 dpi (± 0.003); the text gives 9 % for a 15-minute break. (The figure's y-axis
+// label says "switch-on"; the caption correctly says switch-off.)
+const REINHART_FIG3C_NO_CONTROLS = [
+  { label: "< 30 min", upToHours: 0.5, p: 0.088 },
+  { label: "30–59 min", upToHours: 1, p: 0.315 },
+  { label: "1–2 h", upToHours: 2, p: 0.389 },
+  { label: "2–4 h", upToHours: 4, p: 0.602 },
+  { label: "4–12 h", upToHours: 12, p: 0.962 },
+  { label: "12–24 h", upToHours: 24, p: 0.990 },
+  { label: "24 h +", upToHours: Infinity, p: 0.990 },
+];
+
+/**
+ * Switch-off probability at departure for an absence of the given length (hours).
+ * ASSUMPTION (hourly step, agreed 2026-10-20): an absence of n whole hours falls in the bin that
+ * contains n, lower edge inclusive: 1 h → "1–2 h", 2–3 h → "2–4 h", 4–11 h → "4–12 h",
+ * 12–23 h → "12–24 h", ≥ 24 h → "24 h +". The two bins under one hour are never used at an
+ * hourly step. An absence that runs past 31 December is Infinity → "24 h +".
+ */
+function pSwitchOffAtDeparture(absenceHours) {
+  for (const bin of REINHART_FIG3C_NO_CONTROLS) if (absenceHours < bin.upToHours) return bin.p;
+  return REINHART_FIG3C_NO_CONTROLS[REINHART_FIG3C_NO_CONTROLS.length - 1].p;
+}
+
+/** Number of consecutive absent hours starting at each hour (0 when present; Infinity if the
+ *  absence lasts to the end of the year). */
+function absenceRunLengths(presence) {
+  const n = presence.length;
+  const run = new Float64Array(n);
+  for (let t = n - 1; t >= 0; t--) {
+    if (presence[t]) run[t] = 0;
+    else run[t] = t === n - 1 ? Infinity : run[t + 1] + 1; // Infinity + 1 stays Infinity
+  }
+  return run;
+}
+
+/** Hourly switch-on probabilities for a given illuminance year (shared by all occupants). */
+function lightingInputs(illuminance) {
+  const n = illuminance.length;
+  const pArr = new Float64Array(n), pInt = new Float64Array(n);
+  for (let t = 0; t < n; t++) {
+    pArr[t] = pArrivalSwitchOn(illuminance[t]);
+    pInt[t] = pIntermediateHourly(illuminance[t]);
+  }
+  return { pArr, pInt };
+}
+
+/** User type of occupant k, drawn once from its own stream: Dd with probability shareDd. */
+function assignUserType(seed, k, shareDd) {
+  return mulberry32(streamSeed(seed, k, STREAM.userType))() < shareDd ? "Dd" : "Di";
+}
+
+/**
+ * One occupant's hourly lighting status for the year (Uint8Array, 1 = on).
+ * Reinhart (2004) Fig. 2 without blinds, per hour t:
+ *   1. Arrival (absent at t−1, present at t) with lights off: switch on with P_arr(E) (Dd) or 1 (Di).
+ *   2. Present at t−1 and t with lights off: switch on with the hourly intermediate probability.
+ *      ASSUMPTION: in the arrival hour only the arrival decision applies.
+ *   3. Present with lights on: no switch-off (section 2.4).
+ *   4. Departure (present at t, absent at t+1) with lights on: switch off with the Fig. 3(c)
+ *      probability for the coming absence; the change applies from t+1. Lights not switched off
+ *      stay on through the absence until a later departure.
+ * Lights are off at 00:00 on 1 January. Two random numbers are drawn every hour (switch-on,
+ * switch-off) whether needed or not, so the stream stays aligned for any settings.
+ */
+function simulateLighting(presence, absRun, inputs, userType, rng) {
+  const n = presence.length;
+  const L = new Uint8Array(n);
+  let on = 0;
+  for (let t = 0; t < n; t++) {
+    const uOn = rng(), uOff = rng();
+    const present = presence[t];
+    if (present && !on) {
+      const arriving = t === 0 || !presence[t - 1];
+      const p = arriving ? (userType === "Di" ? 1 : inputs.pArr[t]) : inputs.pInt[t];
+      if (uOn < p) on = 1;
+    }
+    L[t] = on;
+    if (present && on && t < n - 1 && !presence[t + 1]) {
+      if (uOff < pSwitchOffAtDeparture(absRun[t + 1])) on = 0;
+    }
+  }
+  return L;
+}
+
+/** Lighting schedules for all occupants of one presence run. */
+function runLightingModel({ presenceSchedules, inputs, types, seed }) {
+  return presenceSchedules.map((s, k) =>
+    simulateLighting(s, absenceRunLengths(s), inputs, types[k], mulberry32(streamSeed(seed, k, STREAM.lighting))));
+}
+
+/** Lighting statistics by user type ("Dd", "Di", "All"), plus model invariant checks.
+ *  The weekday hour-of-day profile is in clock time. */
+function lightingStats(presenceSchedules, lightSchedules, types, startWeekday, dst = null) {
+  const weekdays = countWeekdays(startWeekday);
+  const groups = {};
+  for (const g of ["Dd", "Di", "All"]) {
+    groups[g] = { n: 0, lit: [], litAbsent: 0, pctPresentLit: 0, nPresentPct: 0, switchOns: 0, hourly: new Float64Array(HOURS_PER_DAY) };
+  }
+  let offWhilePresent = 0, diUnlitWhilePresent = 0;
+
+  for (let k = 0; k < lightSchedules.length; k++) {
+    const s = presenceSchedules[k], L = lightSchedules[k];
+    let lit = 0, litAbsent = 0, present = 0, litPresent = 0, ons = 0;
+    const hourly = new Float64Array(HOURS_PER_DAY);
+    for (let t = 0; t < L.length; t++) {
+      lit += L[t];
+      present += s[t];
+      if (L[t] && !s[t]) litAbsent++;
+      if (L[t] && s[t]) litPresent++;
+      if (L[t] && (t === 0 || !L[t - 1])) ons++;
+      if (t > 0 && s[t] && s[t - 1] && L[t - 1] && !L[t]) offWhilePresent++;
+      if (types[k] === "Di" && s[t] && !L[t]) diUnlitWhilePresent++;
+      if (L[t]) {
+        const c = clockIndex(t, dst);
+        if (!isWeekendDay(Math.floor(c / HOURS_PER_DAY), startWeekday)) hourly[c % HOURS_PER_DAY]++;
+      }
+    }
+    for (const g of [types[k], "All"]) {
+      const G = groups[g];
+      G.n++;
+      G.lit.push(lit);
+      G.litAbsent += litAbsent;
+      if (present > 0) { G.pctPresentLit += litPresent / present; G.nPresentPct++; }
+      G.switchOns += ons;
+      for (let h = 0; h < HOURS_PER_DAY; h++) G.hourly[h] += hourly[h];
+    }
+  }
+
+  const out = {};
+  for (const [g, G] of Object.entries(groups)) {
+    if (G.n === 0) { out[g] = { n: 0 }; continue; }
+    const sorted = G.lit.slice().sort((a, b) => a - b);
+    out[g] = {
+      n: G.n,
+      litMean: sorted.reduce((a, b) => a + b, 0) / G.n,
+      litP10: quantileSorted(sorted, 0.1), litP90: quantileSorted(sorted, 0.9),
+      litAbsentMean: G.litAbsent / G.n,
+      presentLitShare: G.nPresentPct ? G.pctPresentLit / G.nPresentPct : 0,
+      switchOnsMean: G.switchOns / G.n,
+      weekdayHourly: Array.from(G.hourly, (v) => v / (G.n * weekdays)),
+    };
+  }
+  out.checks = { offWhilePresent, diUnlitWhilePresent };
+  return out;
+}
+
+/**
+ * Full run: presence (Page et al. 2008) for each μ, then lighting (Reinhart 2004) when an
+ * illuminance year is given. User types and the lighting random streams are the same for every μ,
+ * so differences between μ come from presence only.
+ */
+function runModel(settings, illuminance) {
+  const { weekdayProfile, startWeekday, mus, seed, nOccupants, shareDd, summerTime } = settings;
+  const dst = summerTime ? summerTimeRange(startWeekday) : null;
+  const types = Array.from({ length: nOccupants }, (_, k) => assignUserType(seed, k, shareDd));
+  const inputs = illuminance ? lightingInputs(illuminance) : null;
+  const runs = mus.map((mu) => {
+    const run = runPresenceModel({ weekdayProfile, startWeekday, mu, seed, nOccupants, dst });
+    if (inputs) {
+      run.lighting = runLightingModel({ presenceSchedules: run.schedules, inputs, types, seed });
+      run.lightingStats = lightingStats(run.schedules, run.lighting, types, startWeekday, dst);
+      run.litHours = run.lighting.map(sumSchedule);
+    }
+    return run;
+  });
+  return { types, runs, dst };
+}
+
+
+/* =====================================================================
+   6. COMPARISON CASES AND ENERGY (PROJECT_SPEC sections 3, 6 and 7)
+   ===================================================================== */
+
+// Defaults agreed with Stella (2026-10-20).
+const ENERGY_DEFAULTS = {
+  setpointLux: 500,       // EN 12464-1, office desk work; also Reinhart (2004)'s setpoint
+  altSetpointLux: 300,    // Sveby (2010) Table 8.1, low end
+  lpdWm2: 10,             // Sveby (2010) Table 8.1, cell office (cellkontor); same for all cases
+  altLpdWm2: 4,           // Sveby (2010) Table B3.4, efficient/LED office rooms (sensitivity)
+  floorAreaM2: 18.6,      // case-study room, Reinhart (2004) office 3.05 × 6.1 m
+};
+
+// Sveby (2010), ch. 8 (supplied by Stella): fixed lighting schedule for offices, on 100 % on
+// weekdays 08:00–17:00 regardless of daylight or presence. Same interval convention as the
+// presence profile: intervals starting 08:00 … 16:00.
+const SVEBY_FIXED_LIGHTING = { startHour: 8, endHour: 17 };
+
+/** Sveby working window in clock time (weekdays 08:00–17:00), evaluated for standard-time hour t. */
+function isSvebyWorkHour(t, startWeekday, dst = null) {
+  const c = clockIndex(t, dst);
+  const h = c % HOURS_PER_DAY;
+  return !isWeekendDay(Math.floor(c / HOURS_PER_DAY), startWeekday) &&
+    h >= SVEBY_FIXED_LIGHTING.startHour && h < SVEBY_FIXED_LIGHTING.endHour;
+}
+
+/** Case 1, fixed schedule (Sveby): 1 on weekdays 08:00–17:00 clock time, otherwise 0. */
+function fixedLightingSchedule(startWeekday, dst = null) {
+  const s = new Uint8Array(HOURS_PER_YEAR);
+  for (let t = 0; t < HOURS_PER_YEAR; t++) s[t] = isSvebyWorkHour(t, startWeekday, dst) ? 1 : 0;
+  return s;
+}
+
+/**
+ * Case 2, deterministic threshold (PROJECT_SPEC section 3): lights on when occupied AND the
+ * illuminance is below the setpoint (strictly below; at the setpoint the lights stay off).
+ * ASSUMPTION: "occupied" is the Sveby fixed working window (weekdays 08:00–17:00, full
+ * presence), so this case differs from the fixed schedule only through daylight.
+ */
+function deterministicLightingSchedule(illuminance, startWeekday, setpointLux, dst = null) {
+  const s = new Uint8Array(HOURS_PER_YEAR);
+  for (let t = 0; t < HOURS_PER_YEAR; t++) s[t] = isSvebyWorkHour(t, startWeekday, dst) && illuminance[t] < setpointLux ? 1 : 0;
+  return s;
+}
+
+function sumSchedule(s) {
+  let n = 0;
+  for (let t = 0; t < s.length; t++) n += s[t];
+  return n;
+}
+
+/** PROJECT_SPEC section 7: annual lighting energy (kWh/m²·yr) = LPD (W/m²) × annual on-hours / 1000. */
+function lightingEnergyKwhPerM2(onHours, lpdWm2) {
+  return (lpdWm2 * onHours) / 1000;
+}
+
+/** Mean, median, P10, P90, min, max (PROJECT_SPEC section 6). Quantiles: linear interpolation. */
+function distributionStats(values) {
+  const sorted = Array.from(values).sort((a, b) => a - b);
+  const n = sorted.length;
+  return {
+    n,
+    mean: sorted.reduce((a, b) => a + b, 0) / n,
+    median: quantileSorted(sorted, 0.5),
+    p10: quantileSorted(sorted, 0.1),
+    p90: quantileSorted(sorted, 0.9),
+    min: sorted[0],
+    max: sorted[n - 1],
+  };
+}
+
+/** A round bin width (1, 2, 2.5 or 5 × 10^k) giving about targetBins bins over the range. */
+function niceBinWidth(range, targetBins = 20) {
+  if (!(range > 0)) return 1;
+  const raw = range / targetBins;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * mag >= raw) return m * mag;
+  return 10 * mag;
+}
+
+/**
+ * Histogram from 0 to just above maxValue, counts split by user type.
+ * A value exactly on a bin edge goes to the upper bin.
+ */
+function typedHistogram(values, types, binWidth, maxValue) {
+  const nBins = Math.max(1, Math.floor(maxValue / binWidth) + 1);
+  const counts = { Dd: new Array(nBins).fill(0), Di: new Array(nBins).fill(0) };
+  values.forEach((v, k) => {
+    const b = Math.min(nBins - 1, Math.max(0, Math.floor(v / binWidth + 1e-9)));
+    counts[types[k]][b]++;
+  });
+  return { binWidth, nBins, edges: Array.from({ length: nBins + 1 }, (_, i) => i * binWidth), counts };
+}
+
+/**
+ * Case 3, ideal switching on the occupant's own presence (Stella, 2026-10-20): lights on exactly
+ * when the occupant is present AND the illuminance is below the setpoint. Returns the schedule.
+ */
+function idealLightingSchedule(presence, illuminance, setpointLux) {
+  const s = new Uint8Array(presence.length);
+  for (let t = 0; t < presence.length; t++) s[t] = presence[t] && illuminance[t] < setpointLux ? 1 : 0;
+  return s;
+}
+
+/** Lit hours of the ideal case without building the schedule (same rule as above). */
+function idealLitHours(presence, illuminance, setpointLux) {
+  let n = 0;
+  for (let t = 0; t < presence.length; t++) if (presence[t] && illuminance[t] < setpointLux) n++;
+  return n;
+}
+
+/**
+ * Four-step decomposition in kWh/m²·yr for each group ("Dd", "Di", "All"):
+ *   level 1 fixed Sveby → level 2 deterministic, full occupancy (daylight effect)
+ *   → level 3 ideal switching on own presence (presence effect) → level 4 stochastic (behaviour effect).
+ * Levels 3–4 are means over the occupants of the group. The steps are sequential, so the
+ * attribution of interactions depends on this order.
+ */
+function decomposition({ fixedHours, detHours, idealHours, stochHours, types, lpdWm2 }) {
+  const out = {};
+  for (const g of ["Dd", "Di", "All"]) {
+    const idx = [];
+    types.forEach((t, k) => { if (g === "All" || t === g) idx.push(k); });
+    if (idx.length === 0) { out[g] = null; continue; }
+    const mean = (arr) => idx.reduce((s, k) => s + arr[k], 0) / idx.length;
+    const levels = [fixedHours, detHours, mean(idealHours), mean(stochHours)].map((h) => lightingEnergyKwhPerM2(h, lpdWm2));
+    out[g] = {
+      n: idx.length, levels,
+      daylight: levels[1] - levels[0], presence: levels[2] - levels[1], behaviour: levels[3] - levels[2],
+    };
+  }
+  return out;
+}
+
+
+/* =====================================================================
+   7. EXPORT (pure: CSV text, metadata, ZIP bytes) — PROJECT_SPEC section 6
+   ===================================================================== */
+
+// ASSUMPTION: Windows line endings (IES VE and IDA ICE run on Windows); EnergyPlus reads both.
+const CSV_EOL = "\r\n";
+
+/** Column names "occ001_Dd", "occ002_Di", … (at least 3 digits). */
+function occupantIds(types) {
+  const w = Math.max(3, String(types.length).length);
+  return types.map((t, k) => `occ${String(k + 1).padStart(w, "0")}_${t}`);
+}
+
+/** 8760 rows × one column per schedule, one header row, comma separator, values 0/1. */
+function schedulesCsv(schedules, header) {
+  const n = schedules[0].length, N = schedules.length;
+  const lines = new Array(n + 1);
+  lines[0] = header.join(",");
+  const row = new Array(N);
+  for (let t = 0; t < n; t++) {
+    for (let k = 0; k < N; k++) row[k] = schedules[k][t];
+    lines[t + 1] = row.join(",");
+  }
+  return lines.join(CSV_EOL) + CSV_EOL;
+}
+
+/** Hourly mean of N 0/1 schedules (fraction 0–1, 4 decimals), one column, clearly labelled as an average. */
+function averageScheduleCsv(schedules, label) {
+  const n = schedules[0].length, N = schedules.length;
+  const lines = [label];
+  for (let t = 0; t < n; t++) {
+    let s = 0;
+    for (let k = 0; k < N; k++) s += schedules[k][t];
+    lines.push((s / N).toFixed(4));
+  }
+  return lines.join(CSV_EOL) + CSV_EOL;
+}
+
+/** Minimal CSV field quoting. */
+function csvField(v) {
+  const s = String(v);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function csvTable(header, rows) {
+  return [header, ...rows].map((r) => r.map(csvField).join(",")).join(CSV_EOL) + CSV_EOL;
+}
+
+/** CRC-32 (IEEE 802.3 polynomial, as used by ZIP). Check value: crc32("123456789") = 0xCBF43926. */
+const CRC32_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC32_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/**
+ * ZIP archive with stored (uncompressed) entries, written from scratch so no library is needed.
+ * Format: PKWARE APPNOTE.TXT, sections 4.3.7 (local header), 4.3.12 (central directory),
+ * 4.3.16 (end of central directory). File names are UTF-8 (general-purpose flag bit 11).
+ * files: [{ name, text }]. Returns a Uint8Array.
+ */
+function makeZip(files, date = new Date(1980, 0, 1)) {
+  const enc = new TextEncoder();
+  const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | (Math.floor(date.getSeconds() / 2));
+  const dosDate = ((Math.max(1980, date.getFullYear()) - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  const entries = files.map((f) => {
+    const name = enc.encode(f.name), data = enc.encode(f.text);
+    return { name, data, crc: crc32(data) };
+  });
+  let size = 22;
+  for (const e of entries) size += 30 + e.name.length + e.data.length + 46 + e.name.length;
+  const buf = new Uint8Array(size);
+  const dv = new DataView(buf.buffer);
+  let p = 0;
+  const u16 = (v) => { dv.setUint16(p, v, true); p += 2; };
+  const u32 = (v) => { dv.setUint32(p, v >>> 0, true); p += 4; };
+  const bytes = (b) => { buf.set(b, p); p += b.length; };
+
+  for (const e of entries) {
+    e.offset = p;
+    u32(0x04034b50); u16(20); u16(0x0800); u16(0); u16(dosTime); u16(dosDate);
+    u32(e.crc); u32(e.data.length); u32(e.data.length); u16(e.name.length); u16(0);
+    bytes(e.name); bytes(e.data);
+  }
+  const cdStart = p;
+  for (const e of entries) {
+    u32(0x02014b50); u16(20); u16(20); u16(0x0800); u16(0); u16(dosTime); u16(dosDate);
+    u32(e.crc); u32(e.data.length); u32(e.data.length); u16(e.name.length); u16(0); u16(0);
+    u16(0); u16(0); u32(0); u32(e.offset);
+    bytes(e.name);
+  }
+  const cdSize = p - cdStart;
+  u32(0x06054b50); u16(0); u16(0); u16(entries.length); u16(entries.length); u32(cdSize); u32(cdStart); u16(0);
+  return buf;
+}
+
+/** Short tag for file names: 0.38 → "0.38". */
+function muTag(mu) {
+  return String(Number(mu.toFixed(4)));
+}
+
+
+/* =====================================================================
+   8. UI
    ===================================================================== */
 
 const state = {
@@ -987,6 +1684,8 @@ function loadText(text, fileName) {
   if (!parsed.ok) { showFileError(fileName, parsed.error); return; }
 
   state.values = parsed.values;
+  state.fileName = fileName;
+  state.fileCrc = crc32(new TextEncoder().encode(text)).toString(16).padStart(8, "0");
   state.summary = computeSummary(parsed.values);
   state.profile = hourOfDayProfile(parsed.values);
   state.daily = dailyStats(parsed.values);
@@ -1009,6 +1708,7 @@ function loadText(text, fileName) {
   renderStats(state.summary);
   renderIlluminanceCharts();
   renderWeekChart();
+  if (state.presence) setStatus("run-status", "New illuminance file loaded. Run again to update the lighting results.", "");
 }
 
 function renderStats(s) {
@@ -1076,10 +1776,13 @@ function readRunSettings() {
   const seed = Number($("seed").value);
   if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295) errors.push("Seed must be a whole number from 0 to 4 294 967 295.");
   const startWeekday = Number($("start-dow").value);
+  const sharePct = Number($("share-dd").value);
+  if (!Number.isFinite(sharePct) || sharePct < 0 || sharePct > 100) errors.push("Share of Dd users must be between 0 and 100 %.");
 
   return errors.length
     ? { ok: false, errors }
-    : { ok: true, settings: { weekdayProfile: profile.values, mus, nOccupants: n, seed, startWeekday } };
+    : { ok: true, settings: { weekdayProfile: profile.values, mus, nOccupants: n, seed, startWeekday, shareDd: sharePct / 100,
+      summerTime: $("summer-time").checked } };
 }
 
 function runPresence() {
@@ -1087,16 +1790,29 @@ function runPresence() {
   if (!r.ok) { setStatus("run-status", r.errors.map(escapeHtml).join("<br>"), "bad"); return; }
   const st = r.settings;
   const t0 = performance.now();
-  const runs = st.mus.map((mu) => runPresenceModel({
-    weekdayProfile: st.weekdayProfile, startWeekday: st.startWeekday, mu, seed: st.seed, nOccupants: st.nOccupants,
-  }));
+  const result = runModel(st, state.values);
   const ms = performance.now() - t0;
-  state.presence = { settings: st, runs };
-  setStatus("run-status", `✓ ${runs.length > 1 ? runs.length + " × " : ""}${fmt(st.nOccupants)} occupants in ${fmt(ms)} ms`, "ok");
+  const hasLighting = !!state.values;
+  state.presence = { settings: st, runs: result.runs, types: result.types, hasLighting, illuminance: state.values,
+    fileName: state.fileName, fileCrc: state.fileCrc, dst: result.dst };
+  const what = hasLighting ? "presence and lighting" : "presence only — load an illuminance CSV to simulate lighting";
+  setStatus("run-status", `✓ ${result.runs.length > 1 ? result.runs.length + " × " : ""}${fmt(st.nOccupants)} occupants, ${what}, in ${fmt(ms)} ms`, "ok");
 
   $("presence-results").hidden = false;
+  $("lighting-results").hidden = !hasLighting;
+  $("energy-results").hidden = !hasLighting;
   updateEmptyState();
   renderPresenceResults();
+  if (hasLighting) {
+    renderLightingResults();
+    $("chart-mu").innerHTML = result.runs.map((r, i) => `<option value="${i}">${fmt(r.mu, 2)}</option>`).join("");
+    $("chart-mu-wrap").hidden = result.runs.length < 2;
+    renderEnergyResults();
+  }
+  $("export-zip").disabled = false;
+  setStatus("export-status", hasLighting
+    ? "Ready: lighting and occupancy schedules for every μ."
+    : "Ready: occupancy schedules only (no illuminance loaded, so no lighting).", "");
   setupWeekPresenceControls();
   renderWeekChart();
 }
@@ -1112,9 +1828,11 @@ const SERIES_COLORS = () => [COLOR.amber, COLOR.blue, COLOR.green];
 function renderPresenceResults() {
   const { settings: st, runs } = state.presence;
   const s0 = runs[0].stats;
+  const dst = state.presence.dst;
   $("presence-meta").textContent =
     `${fmt(st.nOccupants)} occupants · seed ${st.seed} · 1 January = ${WEEKDAY_NAMES[st.startWeekday]} · ` +
-    `${s0.weekdays} weekdays · weekends absent · hourly time step`;
+    `${s0.weekdays} weekdays · weekends absent · hourly time step · ` +
+    (dst ? `summer time ${dateLabel(dst.startDay)} – ${dateLabel(dst.endDay)} (office hours 1 h earlier in standard time)` : "no summer time");
 
   const colors = SERIES_COLORS();
   const head = `<tr><th>μ (hourly)</th><th>≈ 15-min μ</th><th>Present h/yr, mean</th><th>P10 – P90</th>` +
@@ -1182,6 +1900,382 @@ function renderPresenceResults() {
   renderValidationChart();
 }
 
+/* ---- Lighting results ---- */
+
+// Reinhart (2004), section 3 and Eq. (1): south office in Toronto, 2 197 occupied h/yr, 15 W/m²,
+// with blinds: 10–39 kWh/m²·yr by user type, mean 27.2. As lit hours: kWh/m² × 1000 / 15.
+const REINHART_2004_REFERENCE = { lpdWm2: 15, minKwhM2: 10, maxKwhM2: 39, meanKwhM2: 27.2, occupiedHours: 2197 };
+
+function renderLightingResults() {
+  const { settings: st, runs, types } = state.presence;
+  const nDd = types.filter((t) => t === "Dd").length;
+  $("lighting-meta").textContent =
+    `${fmt(st.nOccupants)} occupants · ${fmt(nDd)} Dd and ${fmt(st.nOccupants - nDd)} Di ` +
+    `(${fmt(100 * nDd / st.nOccupants)} % Dd realised, ${fmt(100 * st.shareDd)} % requested) · ` +
+    "same user types and lighting random numbers for every μ";
+
+  const colors = SERIES_COLORS();
+  const head = "<tr><th>μ (hourly)</th><th>Users</th><th>n</th><th>Lit h/yr, mean</th><th>P10 – P90</th>" +
+    "<th>Lit while absent, h/yr</th><th>Present hours lit</th><th>Switch-ons per year</th></tr>";
+  let body = "";
+  runs.forEach((r, i) => {
+    ["Dd", "Di", "All"].forEach((g, j) => {
+      const s = r.lightingStats[g];
+      const muCell = j === 0 ? `<span class="swatch" style="background:${colors[i]}"></span>${fmt(r.mu, 2)}` : "";
+      const cls = j === 0 && i > 0 ? ' class="group-start"' : "";
+      const strong = g === "All" ? (x) => `<strong>${x}</strong>` : (x) => x;
+      body += s.n === 0
+        ? `<tr${cls}><td>${muCell}</td><td>${g}</td><td>0</td><td colspan="5" style="text-align:left">–</td></tr>`
+        : `<tr${cls}><td>${muCell}</td><td>${strong(g)}</td><td>${fmt(s.n)}</td>` +
+          `<td>${strong(fmt(s.litMean))}</td><td>${fmt(s.litP10)} – ${fmt(s.litP90)}</td>` +
+          `<td>${fmt(s.litAbsentMean)}</td><td>${fmt(100 * s.presentLitShare)} %</td><td>${fmt(s.switchOnsMean)}</td></tr>`;
+    });
+  });
+  $("lighting-table").innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+
+  const ref = REINHART_2004_REFERENCE;
+  const toHours = (kwh) => (kwh * 1000) / ref.lpdWm2;
+  $("lighting-footnote").textContent =
+    `Plausibility reference, Reinhart (2004) Toronto south office with blinds, ${fmt(ref.occupiedHours)} occupied h/yr: ` +
+    `${ref.minKwhM2}–${ref.maxKwhM2} kWh/m²·yr at ${ref.lpdWm2} W/m² ≈ ${fmt(toHours(ref.minKwhM2))}–${fmt(toHours(ref.maxKwhM2))} lit h/yr ` +
+    `(mean ${ref.meanKwhM2} ≈ ${fmt(toHours(ref.meanKwhM2))} h). Different climate, presence and blinds: a range check, not a target. ` +
+    "kWh/m² for this zone comes in milestone 5.";
+
+  const msgs = [];
+  const bad = runs.filter((r) => r.lightingStats.checks.offWhilePresent || r.lightingStats.checks.diUnlitWhilePresent);
+  msgs.push(bad.length === 0
+    ? msgHtml("ok", "Model checks passed", "Lights were never switched off while the occupant was present, and Di users were lit whenever present.")
+    : msgHtml("error", "Model check failed", bad.map((r) =>
+      `μ = ${fmt(r.mu, 2)}: ${r.lightingStats.checks.offWhilePresent} switch-offs while present, ${r.lightingStats.checks.diUnlitWhilePresent} unlit Di hours while present.`).join(" ")));
+  if (runs.length > 1) {
+    const all = runs.map((r) => r.lightingStats.All.litMean);
+    const lo = Math.min(...all), hi = Math.max(...all);
+    msgs.push(msgHtml("note", "Effect of μ on lighting",
+      `Mean lit hours across all users range from ${fmt(lo)} to ${fmt(hi)} h/yr over the three μ values ` +
+      `(${fmt(hi - lo)} h, ${fmt(100 * (hi - lo) / lo, 1)} %). More arrivals mean more switch-on decisions; more departures mean more chances to switch off.`));
+  }
+  $("lighting-messages").innerHTML = msgs.join("");
+
+  const sel = $("profile-mu");
+  sel.innerHTML = runs.map((r, i) => `<option value="${i}">${fmt(r.mu, 2)}</option>`).join("");
+  $("profile-mu-wrap").hidden = runs.length < 2;
+  renderLightingChart();
+}
+
+/* ---- Energy and comparison (milestones 4–5) ---- */
+
+function readEnergySettings() {
+  const setpoint = Number($("setpoint").value);
+  const lpd = Number($("lpd").value);
+  const area = Number($("area").value);
+  const errors = [];
+  if (!(lpd > 0)) errors.push("LPD must be a number above 0.");
+  if (!(area > 0)) errors.push("Floor area must be a number above 0.");
+  return { ok: errors.length === 0, errors, setpoint, lpd, area,
+    lpd2: $("lpd-led").checked ? ENERGY_DEFAULTS.altLpdWm2 : null };
+}
+
+/** All numbers for the energy card and histogram, from the stored run and the live settings. */
+function energyComparison(es) {
+  const { settings: st, runs, types, illuminance, dst } = state.presence;
+  const fixedHours = sumSchedule(fixedLightingSchedule(st.startWeekday, dst));
+  const detHours = sumSchedule(deterministicLightingSchedule(illuminance, st.startWeekday, es.setpoint, dst));
+  const stochastic = runs.map((r) => {
+    const pick = (arr, type) => arr.filter((_, k) => types[k] === type);
+    const dist = (arr) => (arr.length ? distributionStats(arr) : null);
+    const idealHours = r.schedules.map((s) => idealLitHours(s, illuminance, es.setpoint));
+    return {
+      mu: r.mu, litHours: r.litHours, idealHours,
+      all: distributionStats(r.litHours), dd: dist(pick(r.litHours, "Dd")), di: dist(pick(r.litHours, "Di")),
+      ideal: distributionStats(idealHours),
+      decomp: decomposition({ fixedHours, detHours, idealHours, stochHours: r.litHours, types, lpdWm2: es.lpd }),
+    };
+  });
+  return { fixedHours, detHours, stochastic };
+}
+
+function chartRunIndex(n) {
+  return Math.min(Number($("chart-mu").value) || 0, n - 1);
+}
+
+function renderEnergyResults() {
+  if (!state.presence || !state.presence.hasLighting) return;
+  const es = readEnergySettings();
+  if (!es.ok) { setStatus("energy-status", es.errors.map(escapeHtml).join("<br>"), "bad"); return; }
+  setStatus("energy-status", "", "");
+  const { settings: st, types } = state.presence;
+  const cmp = energyComparison(es);
+  const kwh = (h, lpd = es.lpd) => lightingEnergyKwhPerM2(h, lpd);
+  const f1 = (x) => fmt(x, 1);
+  const fixedE = kwh(cmp.fixedHours), detE = kwh(cmp.detHours);
+  const s0 = cmp.stochastic[0];
+  const nDd = types.filter((t) => t === "Dd").length;
+
+  // Headline (first μ): leads with the two user groups, not the overall mean (agreed 2026-10-20).
+  const grp = (d, name) => d
+    ? `${name} <strong>${f1(kwh(d.mean))}</strong> (P10–P90 ${f1(kwh(d.p10))}–${f1(kwh(d.p90))})`
+    : null;
+  const groups = [grp(s0.dd, "occupants who use daylight (Dd)"), grp(s0.di, "occupants who ignore it (Di)")].filter(Boolean);
+  // Where the behaviour effect comes from (agreed headline finding, 2026-10-20).
+  const dd = s0.decomp.Dd, di = s0.decomp.Di;
+  let finding = "";
+  if (dd && di) {
+    // Dd behaviour effect is a net of two opposite parts: lights left on (+) and dim hours tolerated (−).
+    const ddText = dd.behaviour >= 0
+      ? `use <strong>${f1(dd.behaviour)}</strong> kWh/m²·yr more than ideal switching`
+      : `use <strong>${f1(-dd.behaviour)}</strong> kWh/m²·yr less than ideal switching`;
+    const total = dd.n * dd.behaviour + di.n * di.behaviour;
+    const diShare = total > 0 && dd.behaviour >= 0 ? (di.n * di.behaviour) / total : null;
+    finding = ` Occupants who use daylight ${ddText}; ` + (diShare !== null
+      ? `<strong>${fmt(100 * diShare)} %</strong> of the behaviour effect comes from occupants who ignore daylight.`
+      : "the whole behaviour effect comes from occupants who ignore daylight.");
+  }
+  $("energy-headline").innerHTML =
+    `Standard schedule (Sveby): <strong>${f1(fixedE)} kWh/m²·yr</strong>. ` +
+    `Simulated occupants: ${groups.join(" and ")} kWh/m²·yr. ` +
+    `Ideal daylight switching with the same presence: <strong>${f1(kwh(s0.ideal.mean))}</strong>.` + finding +
+    `<small>μ = ${fmt(s0.mu, 2)} (hourly) · ${fmt(st.nOccupants)} occupants, ${fmt(100 * nDd / st.nOccupants)} % Dd · ` +
+    `setpoint ${es.setpoint} lx · LPD ${fmt(es.lpd, 1)} W/m² in all cases · seed ${st.seed}</small>`;
+
+  const showAlt = es.lpd2 !== null;
+  const head = `<tr><th>Case</th><th>Lit h/yr</th><th>kWh/m²·yr at ${fmt(es.lpd, 1)} W/m²</th>` +
+    (showAlt ? `<th>kWh/m²·yr at ${fmt(es.lpd2, 1)} W/m²</th>` : "") +
+    `<th>vs fixed</th><th>P10 – P90 (kWh/m²·yr)</th><th>Min – Max</th><th>Median</th><th>kWh/yr for ${fmt(es.area, 1)} m²</th></tr>`;
+  const dash = '<td>–</td>';
+  const row = (label, hours, dist, cls = "", bold = false) => {
+    const b = (x) => (bold ? `<strong>${x}</strong>` : x);
+    return `<tr${cls}><td>${label}</td><td>${fmt(hours)}</td><td>${b(f1(kwh(hours)))}</td>` +
+      (showAlt ? `<td>${f1(kwh(hours, es.lpd2))}</td>` : "") +
+      `<td>${fmt(100 * hours / cmp.fixedHours)} %</td>` +
+      (dist ? `<td>${f1(kwh(dist.p10))} – ${f1(kwh(dist.p90))}</td><td>${f1(kwh(dist.min))} – ${f1(kwh(dist.max))}</td><td>${f1(kwh(dist.median))}</td>` : dash + dash + dash) +
+      `<td>${fmt(kwh(hours) * es.area)}</td></tr>`;
+  };
+  const colors = SERIES_COLORS();
+  let body = row("1 · Fixed schedule (Sveby)", cmp.fixedHours, null) +
+    row(`2 · Deterministic, full occupancy, &lt; ${es.setpoint} lx`, cmp.detHours, null);
+  cmp.stochastic.forEach((s, i) => {
+    const sw = `<span class="swatch" style="background:${colors[i]}"></span>`;
+    body += row(`${sw}3 · Ideal switching, own presence, μ = ${fmt(s.mu, 2)}, mean`, s.ideal.mean, s.ideal, ' class="group-start"');
+    body += row(`${sw}<strong>4 · Stochastic, μ = ${fmt(s.mu, 2)}</strong>, mean`, s.all.mean, s.all, "", true);
+    if (s.dd) body += row(`&nbsp;&nbsp;&nbsp;Dd users (n = ${s.dd.n}), mean`, s.dd.mean, s.dd);
+    if (s.di) body += row(`&nbsp;&nbsp;&nbsp;Di users (n = ${s.di.n}), mean`, s.di.mean, s.di);
+  });
+  $("energy-table").innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+  $("energy-footnote").textContent =
+    "kWh/m²·yr = lit hours × LPD ÷ 1000 (on/off lighting, no dimming). kWh/yr = kWh/m²·yr × floor area. " +
+    "Stochastic lit hours are per occupant, each treated as controlling the lighting of this zone. " +
+    `Deterministic case: lights on in weekday hours 08:00–17:00 when the illuminance is below ${es.setpoint} lx ` +
+    "(ASSUMPTION: full occupancy in that window, so it differs from the fixed schedule only through daylight).";
+
+  // Decomposition table for the selected μ.
+  const sc = cmp.stochastic[chartRunIndex(cmp.stochastic.length)];
+  const sgn = (x) => (x >= 0 ? "+" : "−") + f1(Math.abs(x));
+  const drows = ["Dd", "Di", "All"].filter((g) => sc.decomp[g]).map((g) => {
+    const d = sc.decomp[g];
+    return `<tr><td>${g === "All" ? "<strong>All</strong>" : g} (n = ${d.n})</td><td>${f1(d.levels[0])}</td><td>${sgn(d.daylight)}</td>` +
+      `<td>${sgn(d.presence)}</td><td>${sgn(d.behaviour)}</td><td><strong>${f1(d.levels[3])}</strong></td></tr>`;
+  }).join("");
+  $("decomp-table").innerHTML =
+    `<thead><tr><th>μ = ${fmt(sc.mu, 2)}, kWh/m²·yr</th><th>1 Fixed</th><th>Daylight effect</th><th>Presence effect</th>` +
+    `<th>Behaviour effect</th><th>4 Stochastic</th></tr></thead><tbody>${drows}</tbody>`;
+
+  renderWaterfallChart(sc);
+  renderHistChart(es, fixedE, detE, cmp);
+}
+
+/* ---- Export (milestone 6) ---- */
+
+function buildExportFiles() {
+  const p = state.presence;
+  const { settings: st, runs, types, hasLighting, illuminance } = p;
+  const es = readEnergySettings();
+  const ids = occupantIds(types);
+  const includeAvg = $("export-avg").checked;
+  const now = new Date();
+  const files = [];
+  const N = st.nOccupants;
+
+  for (const r of runs) {
+    const tag = `mu${muTag(r.mu)}`;
+    files.push({ name: `occupancy_${tag}.csv`, text: schedulesCsv(r.schedules, ids) });
+    if (hasLighting) files.push({ name: `lighting_${tag}.csv`, text: schedulesCsv(r.lighting, ids) });
+    if (includeAvg) {
+      files.push({ name: `occupancy_AVERAGE_of_${N}_occupants_${tag}.csv`,
+        text: averageScheduleCsv(r.schedules, `AVERAGE_of_${N}_occupants_presence_fraction`) });
+      if (hasLighting) files.push({ name: `lighting_AVERAGE_of_${N}_occupants_${tag}.csv`,
+        text: averageScheduleCsv(r.lighting, `AVERAGE_of_${N}_occupants_lighting_fraction`) });
+    }
+  }
+
+  let cmp = null;
+  if (hasLighting) {
+    files.push({ name: "reference_fixed_and_deterministic.csv", text: schedulesCsv(
+      [fixedLightingSchedule(st.startWeekday, p.dst), deterministicLightingSchedule(illuminance, st.startWeekday, es.setpoint, p.dst)],
+      ["fixed_sveby_weekdays_08_17", `deterministic_full_occupancy_below_${es.setpoint}lx`]) });
+    cmp = energyComparison(es);
+    const k = (h) => lightingEnergyKwhPerM2(h, es.lpd).toFixed(3);
+    const caseRows = [
+      ["1 fixed Sveby", "", "all", 1, cmp.fixedHours, k(cmp.fixedHours), "", "", "", ""],
+      [`2 deterministic below ${es.setpoint} lx`, "", "all", 1, cmp.detHours, k(cmp.detHours), "", "", "", ""],
+    ];
+    cmp.stochastic.forEach((s) => {
+      const add = (label, g, d) => d && caseRows.push([label, s.mu, g, d.n, d.mean.toFixed(1), k(d.mean),
+        k(d.median), k(d.p10), k(d.p90), `${k(d.min)} to ${k(d.max)}`]);
+      add("3 ideal switching own presence", "all", s.ideal);
+      add("4 stochastic", "Dd", s.dd);
+      add("4 stochastic", "Di", s.di);
+      add("4 stochastic", "all", s.all);
+    });
+    files.push({ name: "summary_cases.csv", text: csvTable(
+      ["case", "mu_hourly", "users", "n", "lit_hours_per_year_mean", `kWh_m2_yr_mean_at_${es.lpd}W_m2`,
+        "kWh_m2_yr_median", "kWh_m2_yr_P10", "kWh_m2_yr_P90", "kWh_m2_yr_min_to_max"], caseRows) });
+  }
+
+  const occRows = [];
+  runs.forEach((r, i) => {
+    const ideal = cmp ? cmp.stochastic[i].idealHours : null;
+    r.schedules.forEach((s, j) => {
+      const present = sumSchedule(s);
+      const row = [ids[j], types[j], r.mu, present];
+      if (hasLighting) {
+        const L = r.lighting[j];
+        let litAbsent = 0;
+        for (let t = 0; t < L.length; t++) if (L[t] && !s[t]) litAbsent++;
+        row.push(r.litHours[j], litAbsent, ideal[j], lightingEnergyKwhPerM2(r.litHours[j], es.lpd).toFixed(3));
+      }
+      occRows.push(row);
+    });
+  });
+  files.push({ name: "summary_occupants.csv", text: csvTable(
+    ["occupant", "user_type", "mu_hourly", "present_hours"].concat(hasLighting
+      ? ["lit_hours", "lit_hours_while_absent", "ideal_switching_lit_hours", `kWh_m2_yr_at_${es.lpd}W_m2`] : []), occRows) });
+
+  files.push({ name: "metadata.json", text: JSON.stringify(exportMetadata(now, es, cmp), null, 2) + "\n" });
+  files.push({ name: "README.txt", text: exportReadme(st, runs, hasLighting, includeAvg, es) });
+  return { files, now };
+}
+
+function exportMetadata(now, es, cmp) {
+  const { settings: st, runs, types, hasLighting } = state.presence;
+  return {
+    tool: "Occupant Schedule Generator (milestones 1–6)",
+    created: now.toISOString(),
+    reproducibility: "Same inputs and seed give identical schedules.",
+    illuminance_input: hasLighting
+      ? { file: state.presence.fileName, crc32_of_file_text: state.presence.fileCrc, rows: HOURS_PER_YEAR, unit: "lux",
+        convention: "row 1 = 1 January 00:00–01:00, non-leap year, standard time without daylight saving" }
+      : null,
+    run: {
+      seed: st.seed, occupants: st.nOccupants, mu_hourly: st.mus, start_weekday_1_january: WEEKDAY_NAMES[st.startWeekday],
+      weekends: "absent", time_step: "1 hour", initial_state: "absent, lights off at 00:00 on 1 January",
+      summer_time: state.presence.dst
+        ? { rule: "EU (Directive 2000/84/EC): last Sunday of March to last Sunday of October, changes at 02:00 standard time",
+          from: dateLabel(state.presence.dst.startDay), to: dateLabel(state.presence.dst.endDay),
+          effect: "presence profile and Sveby window shifted 1 h earlier in standard time; illuminance not shifted; all files in standard time" }
+        : "not applied",
+      dd_share_requested: st.shareDd, dd_realised: types.filter((t) => t === "Dd").length,
+      user_types_by_occupant: types,
+    },
+    presence_model: {
+      source: "Page, Robinson, Morel & Scartezzini (2008), Energy and Buildings 40(2), 83–98, Eq. (2), (4), (5), (6)",
+      weekday_profile_24h: st.weekdayProfile,
+      profile_source: "Sveby (2010) Brukarindata kontor (default; user may change)",
+      mu_note: "hourly time step, not from paper (paper used 15 minutes)",
+      mu_forcing_log: runs.map((r) => ({ mu: r.mu, forced_steps: r.trans.forcedCount, of_steps: r.trans.steps,
+        groups: r.trans.forcedGroups.map((g) => ({ from_hour: g.fromHour, mu_used: Number(g.muUsed.toFixed(4)), count: g.count })) })),
+    },
+    lighting_model: hasLighting ? {
+      algorithm: "Reinhart (2004), Solar Energy 77, 15–28, section 2.1, Fig. 2, Table 1, without blinds",
+      arrival_Dd: { source: "Hunt (1979), Building and Environment 14, 21–33, section 5.2.4, Fig. 9(d)",
+        equation: "P = Phi(slope * (log10 E - median))", ...HUNT_1979,
+        phi: "erf from Abramowitz & Stegun (1964) formula 7.1.26" },
+      arrival_Di: "P = 1",
+      intermediate_per_5min: { source: "Reinhart (2004) Fig. 3(b), reconstructed (printed formula garbled)",
+        equation: "P5 = base + amplitude / (1 + exp(steepness * (log10 E - midLog10Lux))); P5 = 1 at E = 0", ...REINHART_FIG3B },
+      intermediate_per_hour: "1 - (1 - P5)^12 (assumes constant illuminance within the hour)",
+      switch_off_at_departure: { source: "Reinhart (2004) Fig. 3(c), no controls, digitised (+/- 0.003)",
+        bins: REINHART_FIG3C_NO_CONTROLS.map((b) => ({ absence: b.label, p: b.p })),
+        hourly_mapping: "absence of n whole hours uses the bin containing n, lower edge inclusive; past 31 December = 24 h +" },
+      no_switch_off_while_present: true,
+    } : null,
+    energy: hasLighting ? {
+      formula: "kWh/m2/yr = lit hours * LPD (W/m2) / 1000 (on/off, no dimming)",
+      lpd_W_m2: es.lpd, lpd_sensitivity_W_m2: es.lpd2, floor_area_m2: es.area, setpoint_lux: es.setpoint,
+      fixed_case: "Sveby (2010) ch. 8: 100 % on weekdays 08:00–17:00",
+      deterministic_case: "Sveby window with full occupancy AND E < setpoint",
+      ideal_case: "own presence AND E < setpoint",
+      decomposition_kWh_m2_yr: cmp.stochastic.map((s) => ({ mu: s.mu, ...Object.fromEntries(
+        Object.entries(s.decomp).filter(([, v]) => v).map(([g, v]) => [g, {
+          n: v.n, fixed: v.levels[0], deterministic: v.levels[1], ideal: v.levels[2], stochastic: v.levels[3],
+          daylight_effect: v.daylight, presence_effect: v.presence, behaviour_effect: v.behaviour }])) })),
+    } : null,
+    assumptions: [
+      "Illuminance at a single sensor point stands in for the minimum work-plane illuminance.",
+      "Hourly time step: breaks shorter than one hour are not represented.",
+      "Weekends absent; no public holidays or long absences.",
+      "All schedules are in standard time, aligned with the illuminance file. With summer time on, office hours (presence profile, Sveby window) are 1 h earlier in standard time during EU summer time.",
+      "Each stochastic occupant is treated as controlling the lighting of the whole zone.",
+    ],
+  };
+}
+
+function exportReadme(st, runs, hasLighting, includeAvg, es) {
+  const N = st.nOccupants;
+  const w = Math.max(3, String(N).length);
+  return [
+    "Occupant Schedule Generator — exported schedules",
+    "",
+    "FILES",
+    "occupancy_mu<μ>.csv   presence 0/1, one column per occupant",
+    hasLighting ? "lighting_mu<μ>.csv    lighting 0/1, one column per occupant" : "(no lighting: no illuminance file was loaded)",
+    includeAvg ? "*_AVERAGE_of_<N>_occupants_*.csv   hourly MEAN of the individual schedules (fraction 0–1). An average, not an individual schedule: for multi-occupant zones only." : null,
+    hasLighting ? "reference_fixed_and_deterministic.csv   column 1 fixed Sveby, column 2 deterministic (full occupancy, below setpoint)" : null,
+    hasLighting ? "summary_cases.csv, summary_occupants.csv   energy and hours per case and per occupant" : "summary_occupants.csv   present hours per occupant",
+    "metadata.json   seed, settings, coefficients with sources, μ-forcing log, assumptions",
+    "",
+    "FORMAT",
+    "8760 data rows + 1 header row. Row 2 = 1 January 00:00–01:00, non-leap year.",
+    "Comma separator, point decimal, Windows line endings. Columns occ" + "1".padStart(w, "0") + "_<type> …, type Dd or Di.",
+    "All rows in standard time (UTC+1), aligned with the illuminance file used to generate them.",
+    state.presence.dst
+      ? `EU summer time applied to occupancy: from ${dateLabel(state.presence.dst.startDay)} to ${dateLabel(state.presence.dst.endDay)} office hours are 1 h earlier in standard time (08:00–17:00 clock = 07:00–16:00 standard).`
+      : "No summer time applied: office hours are the same in standard time all year.",
+    "",
+    "ENERGYPLUS / HONEYBEE (Schedule:File) — tested with EnergyPlus 25.2.0 (values, hours and weekdays read exactly)",
+    "  File Name                        lighting_mu<μ>.csv",
+    "  Column Number                    occupant number (1 = first occupant)",
+    "  Rows to Skip at Top              1",
+    "  Number of Hours of Data          8760",
+    "  Column Separator                 Comma",
+    "  Interpolate to Timestep          No",
+    "  Minutes per Item                 60",
+    "  Adjust Schedule for Daylight Savings   No   (the files are in standard time; summer time is already in the occupancy)",
+    "",
+    "Honeybee, IES VE and IDA ICE: plain CSV, one column per occupant. Expected to work, not yet tested.",
+    "",
+    `Run: seed ${st.seed}, ${N} occupants, μ (hourly) ${runs.map((r) => r.mu).join(", ")}, 1 January = ${WEEKDAY_NAMES[st.startWeekday]}` +
+      (hasLighting ? `, setpoint ${es.setpoint} lx, LPD ${es.lpd} W/m².` : "."),
+  ].filter((l) => l !== null).join(CSV_EOL) + CSV_EOL;
+}
+
+function exportZip() {
+  if (!state.presence) return;
+  const es = readEnergySettings();
+  if (state.presence.hasLighting && !es.ok) { setStatus("export-status", "Fix the energy settings first.", "bad"); return; }
+  const t0 = performance.now();
+  const { files, now } = buildExportFiles();
+  const zip = makeZip(files, now);
+  const st = state.presence.settings;
+  const day = now.toISOString().slice(0, 10);
+  const name = `occupant-schedules_seed${st.seed}_${st.nOccupants}occ_${day}.zip`;
+  const url = URL.createObjectURL(new Blob([zip], { type: "application/zip" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  setStatus("export-status", `✓ ${escapeHtml(name)} · ${files.length} files · ${fmt(zip.length / 1e6, 1)} MB · ${fmt(performance.now() - t0)} ms`, "ok");
+}
+
 function setupWeekPresenceControls() {
   const { settings: st, runs } = state.presence;
   $("week-presence-controls").hidden = false;
@@ -1199,12 +2293,17 @@ function currentWeekPresence() {
   let occ = Math.round(Number($("week-occ").value));
   if (!Number.isFinite(occ) || occ < 1) occ = 1;
   occ = Math.min(occ, settings.nOccupants);
-  return { schedule: runs[runIdx].schedules[occ - 1], occupant: occ, mu: runs[runIdx].mu };
+  const run = runs[runIdx];
+  return {
+    schedule: run.schedules[occ - 1], occupant: occ, mu: run.mu,
+    lights: run.lighting ? run.lighting[occ - 1] : null,
+    type: state.presence.types[occ - 1],
+  };
 }
 
 
 /* =====================================================================
-   6. CHARTS (Chart.js)
+   9. CHARTS (Chart.js)
    ===================================================================== */
 
 const CSS = getComputedStyle(document.documentElement);
@@ -1214,6 +2313,7 @@ const COLOR = {
   green: CSS.getPropertyValue("--green").trim(),
   greyBar: CSS.getPropertyValue("--grey-bar").trim(),
   muted: CSS.getPropertyValue("--muted").trim(),
+  ink: CSS.getPropertyValue("--ink").trim(),
   faint: CSS.getPropertyValue("--faint").trim(),
   line: CSS.getPropertyValue("--line").trim(),
 };
@@ -1269,7 +2369,7 @@ function renderHourlyChart() {
   const options = baseOptions(function (value) {
     return value % 3 === 0 ? this.getLabelForValue(value) : "";
   });
-  options.scales.x.title = { display: true, text: "Hour of day (interval start)" };
+  options.scales.x.title = { display: true, text: "Hour of day, standard time (interval start)" };
   options.plugins.legend.display = false;
   options.plugins.tooltip.callbacks.title = (items) => `${hourLabel(items[0].dataIndex)}–${hourLabel(items[0].dataIndex + 1)}`;
   charts.hourly = new Chart($("chart-hourly"), {
@@ -1321,7 +2421,7 @@ function renderValidationChart() {
   const options = baseOptions(function (value) {
     return value % 3 === 0 ? this.getLabelForValue(value) : "";
   });
-  options.scales.x.title = { display: true, text: "Hour of day (interval start)" };
+  options.scales.x.title = { display: true, text: "Hour of day, clock time (interval start)" };
   options.scales.y = {
     min: 0, max: 1, title: { display: true, text: "Presence probability" },
     grid: { color: COLOR.line }, ticks: { font: { size: 11 }, callback: (v) => fmt(v, 1) },
@@ -1346,6 +2446,158 @@ function renderValidationChart() {
   });
 }
 
+// Vertical marker lines on a category axis (no extra library). A marker's position is a
+// fractional category index, so a value can sit inside a histogram bin.
+const markerPlugin = {
+  id: "markers",
+  afterDatasetsDraw(chart, _args, opts) {
+    const items = (opts && opts.items) || [];
+    const { ctx, chartArea, scales } = chart;
+    ctx.save();
+    items.forEach((m, i) => {
+      const px = scales.x.getPixelForValue(m.position);
+      ctx.strokeStyle = m.color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash(m.dash || [6, 4]);
+      ctx.beginPath(); ctx.moveTo(px, chartArea.top); ctx.lineTo(px, chartArea.bottom); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = "600 12px system-ui, sans-serif";
+      ctx.fillStyle = m.color;
+      const w = ctx.measureText(m.label).width;
+      const tx = px + 5 + w > chartArea.right ? px - 5 - w : px + 5;
+      ctx.fillText(m.label, tx, chartArea.top + 13 + i * 16);
+    });
+    ctx.restore();
+  },
+};
+
+// Value labels above (or below) bars of the waterfall chart; text is in dataset.valueLabels.
+const barLabelPlugin = {
+  id: "barLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.font = "600 11px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    chart.data.datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di);
+      if (meta.hidden || !ds.valueLabels) return;
+      meta.data.forEach((bar, i) => {
+        const text = ds.valueLabels[i];
+        if (!text) return;
+        const top = Math.min(bar.y, bar.base);
+        ctx.fillStyle = COLOR.ink;
+        ctx.fillText(text, bar.x, top - 4);
+      });
+    });
+    ctx.restore();
+  },
+};
+
+/** Waterfall: two totals (fixed, stochastic) and three floating deltas, grouped by user type. */
+function renderWaterfallChart(sc) {
+  if (!chartsAvailable()) return;
+  const labels = ["1 Fixed (Sveby)", "Daylight effect", "Presence effect", "Behaviour effect", "4 Stochastic"];
+  const f1 = (x) => fmt(x, 1);
+  const sgn = (x) => (x >= 0 ? "+" : "−") + f1(Math.abs(x));
+  const series = [["Dd", COLOR.amber, "rgba(200, 132, 26, 0.45)"], ["Di", COLOR.blue, "rgba(46, 91, 114, 0.45)"]]
+    .filter(([g]) => sc.decomp[g]);
+  const datasets = series.map(([g, solid, light]) => {
+    const L = sc.decomp[g].levels;
+    return {
+      label: `${g} users (n = ${sc.decomp[g].n})`,
+      data: [[0, L[0]], [L[1], L[0]], [L[2], L[1]], [L[3], L[2]], [0, L[3]]],
+      backgroundColor: [solid, light, light, light, solid],
+      borderColor: solid, borderWidth: 1, borderSkipped: false,
+      valueLabels: [f1(L[0]), sgn(L[1] - L[0]), sgn(L[2] - L[1]), sgn(L[3] - L[2]), f1(L[3])],
+      deltas: [L[0], L[1] - L[0], L[2] - L[1], L[3] - L[2], L[3]],
+    };
+  });
+  charts.waterfall?.destroy();
+  const options = baseOptions();
+  options.scales.x = { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false, font: { size: 11 },
+    callback: function (v) {
+      const short = ["Fixed", "Daylight", "Presence", "Behaviour", "Stochastic"];
+      return this.chart.width < 560 ? short[v] : this.getLabelForValue(v);
+    } } };
+  options.scales.y = { beginAtZero: true, title: { display: true, text: "kWh/m²·yr" }, grid: { color: COLOR.line },
+    ticks: { font: { size: 11 } }, grace: "8%" };
+  options.interaction = { mode: "index", intersect: false };
+  options.plugins.legend.labels.boxHeight = 8;
+  options.plugins.tooltip.callbacks.label = (ctx) => {
+    const v = ctx.dataset.deltas[ctx.dataIndex];
+    const isTotal = ctx.dataIndex === 0 || ctx.dataIndex === 4;
+    return `${ctx.dataset.label}: ${isTotal ? f1(v) : sgn(v)} kWh/m²·yr`;
+  };
+  charts.waterfall = new Chart($("chart-waterfall"), { type: "bar", data: { labels, datasets }, options, plugins: [barLabelPlugin] });
+}
+
+function renderHistChart(es, fixedE, detE, cmp) {
+  if (!chartsAvailable()) return;
+  const { types } = state.presence;
+  const s = cmp.stochastic[chartRunIndex(cmp.stochastic.length)];
+  const values = Array.from(s.litHours, (h) => lightingEnergyKwhPerM2(h, es.lpd));
+  const maxValue = Math.max(fixedE, detE, ...values);
+  const binWidth = niceBinWidth(maxValue, 20);
+  const hist = typedHistogram(values, types, binWidth, maxValue);
+  const dec = binWidth < 1 ? 1 : 0;
+  const labels = hist.counts.Dd.map((_, i) => `${fmt(hist.edges[i], dec)}–${fmt(hist.edges[i + 1], dec)}`);
+  const idealE = lightingEnergyKwhPerM2(s.ideal.mean, es.lpd);
+
+  charts.hist?.destroy();
+  const options = baseOptions();
+  options.scales.x = { stacked: true, grid: { display: false },
+    title: { display: true, text: `kWh/m²·yr at ${fmt(es.lpd, 1)} W/m²` },
+    ticks: { autoSkip: true, maxRotation: 0, font: { size: 11 } } };
+  options.scales.y = { stacked: true, beginAtZero: true, title: { display: true, text: "Occupants" },
+    grid: { color: COLOR.line }, ticks: { precision: 0, font: { size: 11 } } };
+  options.interaction = { mode: "index", intersect: false };
+  options.plugins.legend.labels.boxHeight = 8;
+  options.plugins.tooltip.callbacks.title = (items) => `${items[0].label} kWh/m²·yr`;
+  options.plugins.tooltip.callbacks.label = (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} occupants`;
+  const pos = (v) => v / binWidth - 0.5; // bin i is centred on index i
+  options.plugins.markers = { items: [
+    { position: pos(fixedE), color: COLOR.muted, label: `Fixed ${fmt(fixedE, 1)}` },
+    { position: pos(detE), color: COLOR.green, label: `Deterministic ${fmt(detE, 1)}` },
+    { position: pos(idealE), color: COLOR.ink, dash: [2, 3], label: `Ideal, own presence ${fmt(idealE, 1)}` },
+  ] };
+  const datasets = [];
+  if (s.dd) datasets.push({ label: "Dd users", data: hist.counts.Dd, backgroundColor: COLOR.amber, borderRadius: 1 });
+  if (s.di) datasets.push({ label: "Di users", data: hist.counts.Di, backgroundColor: COLOR.blue, borderRadius: 1 });
+  charts.hist = new Chart($("chart-hist"), { type: "bar", data: { labels, datasets }, options, plugins: [markerPlugin] });
+}
+
+function renderLightingChart() {
+  if (!chartsAvailable() || !state.presence || !state.presence.hasLighting) return;
+  const { runs } = state.presence;
+  const run = runs[Math.min(Number($("profile-mu").value) || 0, runs.length - 1)];
+  const ls = run.lightingStats;
+  const labels = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+  const pct = (arr) => arr.map((v) => 100 * v);
+  charts.lighting?.destroy();
+  const options = baseOptions(function (value) {
+    return value % 3 === 0 ? this.getLabelForValue(value) : "";
+  });
+  options.scales.x.title = { display: true, text: "Hour of day, clock time (interval start)" };
+  options.scales.y = {
+    min: 0, max: 100, title: { display: true, text: "Share of occupants (%)" },
+    grid: { color: COLOR.line }, ticks: { font: { size: 11 }, callback: (v) => fmt(v) },
+  };
+  options.plugins.tooltip.callbacks.title = (items) => `${hourLabel(items[0].dataIndex)}–${hourLabel(items[0].dataIndex + 1)}`;
+  options.plugins.tooltip.callbacks.label = (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y, 1)} %`;
+  options.plugins.legend.labels.boxHeight = 8;
+  const line = (label, data, color, dash) => ({
+    type: "line", label, data, borderColor: color, backgroundColor: color,
+    borderWidth: 2, borderDash: dash || [], pointRadius: 2.5, pointHoverRadius: 4,
+  });
+  const datasets = [];
+  if (ls.Dd.n) datasets.push(line(`Lights on, Dd (n = ${ls.Dd.n})`, pct(ls.Dd.weekdayHourly), COLOR.amber));
+  if (ls.Di.n) datasets.push(line(`Lights on, Di (n = ${ls.Di.n})`, pct(ls.Di.weekdayHourly), COLOR.blue));
+  if (ls.Dd.n && ls.Di.n) datasets.push(line("Lights on, all", pct(ls.All.weekdayHourly), COLOR.muted, [5, 4]));
+  datasets.push({ label: "Present", data: pct(run.stats.hourMean), backgroundColor: COLOR.greyBar, borderRadius: 2 });
+  charts.lighting = new Chart($("chart-lighting"), { type: "bar", data: { labels, datasets }, options });
+}
+
 function renderWeekChart() {
   const hasLux = !!state.values;
   const pres = currentWeekPresence();
@@ -1361,13 +2613,18 @@ function renderWeekChart() {
   $("week-next").disabled = state.week >= 53;
   if (!chartsAvailable()) return;
 
-  const labels = [], lux = [], presence = [];
+  const lightsSched = pres && hasLux ? pres.lights : null;
+  $("week-legend-note").textContent = lightsSched
+    ? "Blue: occupant present. Yellow (lower half): lights on."
+    : "Blue: occupant present.";
+  const labels = [], lux = [], presence = [], lights = [];
   for (let d = startDay; d <= endDay; d++) {
     for (let h = 0; h < HOURS_PER_DAY; h++) {
       const i = d * HOURS_PER_DAY + h;
       labels.push(`${dayName(d)} ${dateLabel(d)} ${hourLabel(h)}`);
       if (hasLux) lux.push(state.values[i]);
       if (pres) presence.push(pres.schedule[i]);
+      if (lightsSched) lights.push(lightsSched[i] ? 0.5 : 0);
     }
   }
 
@@ -1384,6 +2641,14 @@ function renderWeekChart() {
       { label: "Hourly illuminance", data: lux, borderColor: COLOR.amber, backgroundColor: COLOR.amber, borderWidth: 1.5, pointRadius: 0 },
       ...referenceLines(labels.length));
   }
+  if (lightsSched) {
+    datasets.push({
+      label: `Lights on (${pres.type} user)`,
+      data: lights, isLights: true, stepped: "after", fill: "origin",
+      borderColor: "rgba(214, 164, 22, 0.9)", backgroundColor: "rgba(240, 196, 40, 0.45)",
+      borderWidth: 1, pointRadius: 0, yAxisID: "presence",
+    });
+  }
   if (pres) {
     datasets.push({
       label: `Present (occupant ${pres.occupant}, μ = ${fmt(pres.mu, 2)})`,
@@ -1395,7 +2660,9 @@ function renderWeekChart() {
   options.plugins.legend.labels.boxHeight = 8;
   options.plugins.tooltip.callbacks.label = (ctx) => ctx.dataset.isPresence
     ? (ctx.parsed.y ? "Present" : "Absent")
-    : `${ctx.dataset.label}: ${fmtLux(ctx.parsed.y)} lx`;
+    : ctx.dataset.isLights
+      ? (ctx.parsed.y ? "Lights on" : "Lights off")
+      : `${ctx.dataset.label}: ${fmtLux(ctx.parsed.y)} lx`;
   if (hasLux && pres) {
     options.scales.presence = { position: "right", min: 0, max: 1, display: false };
   } else if (!hasLux) {
@@ -1412,7 +2679,7 @@ function setWeek(w) {
 
 
 /* =====================================================================
-   7. EVENT WIRING
+   10. EVENT WIRING
    ===================================================================== */
 
 $("file-input").addEventListener("change", (e) => {
@@ -1439,18 +2706,27 @@ $("profile-sveby").addEventListener("click", () => {
 $("profile-input").addEventListener("input", () => { readProfile(); markStale(); });
 document.querySelectorAll('input[name="mu-mode"]').forEach((el) => el.addEventListener("change", () => { updateMuFields(); markStale(); }));
 for (let i = 0; i < 3; i++) $(`mu-${i}`).addEventListener("input", () => { updateMuFields(); markStale(); });
-["n-occ", "seed", "start-dow"].forEach((id) => $(id).addEventListener("input", markStale));
+["n-occ", "seed", "start-dow", "summer-time"].forEach((id) => { $(id).addEventListener("input", markStale); $(id).addEventListener("change", markStale); });
 $("start-dow").addEventListener("change", () => { if (!state.presence) renderWeekChart(); });
 $("run-presence").addEventListener("click", runPresence);
+$("share-dd").addEventListener("input", markStale);
+$("profile-mu").addEventListener("change", renderLightingChart);
+$("export-zip").addEventListener("click", exportZip);
+["setpoint", "lpd", "lpd-led", "area", "chart-mu"].forEach((id) => {
+  $(id).addEventListener("input", renderEnergyResults);
+  $(id).addEventListener("change", renderEnergyResults);
+});
 
 // Initial state
 $("profile-input").value = SVEBY_OFFICE_PRESENCE.map((v) => String(v)).join(" ");
 readProfile();
 updateMuFields();
+$("switch-off-table").innerHTML = "<tr><td><strong>Coming absence</strong></td><td><strong>P(switch off)</strong></td></tr>" +
+  REINHART_FIG3C_NO_CONTROLS.map((b) => `<tr><td>${b.label}${b.upToHours <= 1 ? " (not used at hourly step)" : ""}</td><td>${fmt(b.p, 3)}</td></tr>`).join("");
 
 
 /* =====================================================================
-   8. TEST PANEL (open the page with ?test)
+   11. TEST PANEL (open the page with ?test)
    ===================================================================== */
 
 function runTests() {
@@ -1753,6 +3029,316 @@ function runTests() {
     }
     const T01h = n01 / n0, T11h = n11 / n1, muH = (T01h + 1 - T11h) / (1 - T01h + T11h);
     near(muH, muHourlyFrom15min(mu15), 0.03, "simulated hourly μ");
+  });
+
+  // ================= Milestone 3: maths =================
+  test("erf (A&S 7.1.26) matches exact values: erf(0.5), erf(1), erf(2), erf(−1) within 1.5e-7", () => {
+    // Exact values from Python math.erf.
+    near(erf(0.5), 0.5204998778130465, 1.5e-7); near(erf(1), 0.8427007929497149, 1.5e-7);
+    near(erf(2), 0.9953222650189527, 1.5e-7); near(erf(-1), -0.8427007929497149, 1.5e-7); near(erf(0), 0, 1e-9);
+  });
+  test("Φ: Φ(0) = 0.5, Φ(1.96) = 0.975, Φ(−z) = 1 − Φ(z)", () => {
+    near(normalCdf(0), 0.5, 1e-9); near(normalCdf(1.959964), 0.975, 2e-7);
+    near(normalCdf(-1.3) + normalCdf(1.3), 1, 1e-9);
+  });
+
+  // ================= Milestone 3: Hunt (1979) arrival curve =================
+  test("Hunt: P = 0.5 at the median 10^1.82 = 66.07 lx (Hunt rounds to 67 lx; P(67 lx) = 0.494)", () => {
+    near(pArrivalSwitchOn(Math.pow(10, 1.82)), 0.5, 1e-7); near(pArrivalSwitchOn(67), 0.4937, 1e-3);
+  });
+  test("Hunt: P(150 lx) = 0.179 (section 5.3: 18 %), P(100 lx) = 0.321", () => {
+    near(pArrivalSwitchOn(150), 0.17912, 1e-4); near(pArrivalSwitchOn(100), 0.32118, 1e-4);
+  });
+  test("Hunt: P(500 lx) = 0.0117 (text: 'less than 1%'), P(1000 lx) = 0.00117, P(0) = 1", () => {
+    near(pArrivalSwitchOn(500), 0.011672, 1e-5); near(pArrivalSwitchOn(1000), 0.0011657, 1e-6); eq(pArrivalSwitchOn(0), 1);
+  });
+  test("Hunt: decreasing in E from 1 to 100 000 lx, always within 0–1", () => {
+    let prev = 1;
+    for (let e = 0; e <= 5; e += 0.05) {
+      const p = pArrivalSwitchOn(Math.pow(10, e)); assert(p >= 0 && p <= 1 && p <= prev + 1e-12, `at 10^${e}`); prev = p;
+    }
+  });
+  test("comparison: digitised Reinhart Fig. 3(a) fit agrees with Hunt within 0.01 from 8 to 500 lx", () => {
+    // Logistic in log10(E) fitted to Fig. 3(a) digitised at 400 dpi (2026-10-20); comparison only, not used in the model.
+    const fig3a = (E) => -0.01798726 + 1.03802231 / (1 + Math.exp(4.08651616 * (Math.log10(E) - 1.82186366)));
+    let worst = 0;
+    for (let E = 8; E <= 500; E++) worst = Math.max(worst, Math.abs(fig3a(E) - pArrivalSwitchOn(E)));
+    assert(worst < 0.01, `max difference ${worst}`);
+  });
+
+  // ================= Milestone 3: Reinhart (2004) Fig. 3(b), 3(c) =================
+  test("Fig. 3(b): P₅(0) = 1, P₅(50) = 0.0197, P₅(10^2.41 = 257 lx) = 0.0112, P₅(1000) = 0.0027", () => {
+    eq(pIntermediate5min(0), 1); near(pIntermediate5min(50), 0.0197, 1e-6);
+    near(pIntermediate5min(Math.pow(10, 2.41)), 0.0112, 1e-12); near(pIntermediate5min(1000), 0.0027, 1e-6);
+  });
+  test("Fig. 3(b) reconstruction: high below 230 lx, low above 320 lx (as plotted; printed minus sign would invert it)", () => {
+    assert(pIntermediate5min(200) > 0.019 && pIntermediate5min(230) > 0.0185, "plateau");
+    assert(pIntermediate5min(320) < 0.003 && pIntermediate5min(700) < 0.0028, "floor");
+  });
+  test("hourly conversion: 1 − (1 − 0.0197)^12 = 0.2124; at 257 lx 0.1264; at 0 lx 1", () => {
+    near(pIntermediateHourly(100), 0.212396, 1e-5); near(pIntermediateHourly(Math.pow(10, 2.41)), 0.126422, 1e-5);
+    eq(pIntermediateHourly(0), 1);
+  });
+  test("Fig. 3(c) bins: 0.25 h → 0.088, 0.5 h → 0.315, 1 → 0.389, 2 and 3 → 0.602, 4 and 11 → 0.962, 12, 23, 24, ∞ → 0.990", () => {
+    eq(pSwitchOffAtDeparture(0.25), 0.088); eq(pSwitchOffAtDeparture(0.5), 0.315); eq(pSwitchOffAtDeparture(1), 0.389);
+    eq(pSwitchOffAtDeparture(2), 0.602); eq(pSwitchOffAtDeparture(3), 0.602); eq(pSwitchOffAtDeparture(4), 0.962);
+    eq(pSwitchOffAtDeparture(11), 0.962); eq(pSwitchOffAtDeparture(12), 0.990); eq(pSwitchOffAtDeparture(23), 0.990);
+    eq(pSwitchOffAtDeparture(24), 0.990); eq(pSwitchOffAtDeparture(Infinity), 0.990);
+  });
+  test("absence run lengths: [1,0,0,1,0] → [0,2,1,0,∞]", () => {
+    const r = absenceRunLengths(Uint8Array.from([1, 0, 0, 1, 0]));
+    eq(r[0], 0); eq(r[1], 2); eq(r[2], 1); eq(r[3], 0); eq(r[4], Infinity);
+  });
+
+  // ================= Milestone 3: lighting simulation =================
+  const constLux = (E) => new Float64Array(HOURS_PER_YEAR).fill(E);
+  const model = (extra) => runModel(Object.assign({
+    weekdayProfile: SVEBY_OFFICE_PRESENCE, startWeekday: 0, mus: [0.38], seed: 12345, nOccupants: 50, shareDd: 0.5,
+  }, extra), extra.lux || constLux(400));
+
+  test("Di users are lit whenever present (any illuminance)", () => {
+    const m = model({ shareDd: 0, lux: bell.map((v) => v * 20) });
+    const r = m.runs[0];
+    assert(m.types.every((t) => t === "Di"), "all Di");
+    r.schedules.forEach((s, k) => s.forEach((v, t) => { if (v && !r.lighting[k][t]) throw new Error(`occupant ${k + 1} unlit at ${t}`); }));
+  });
+  test("at 0 lx all year, Dd users are lit whenever present", () => {
+    const m = model({ shareDd: 1, lux: constLux(0) });
+    const r = m.runs[0];
+    r.schedules.forEach((s, k) => s.forEach((v, t) => { if (v && !r.lighting[k][t]) throw new Error(`occupant ${k + 1} unlit at ${t}`); }));
+  });
+  test("lights never switch off while present, and only switch off after a departure hour", () => {
+    const m = model({ mus: [1], lux: bell.map((v) => v * 3) });
+    const r = m.runs[0];
+    r.lighting.forEach((L, k) => {
+      const s = r.schedules[k];
+      for (let t = 1; t < L.length; t++) {
+        if (L[t - 1] && !L[t] && !(s[t - 1] && !s[t])) throw new Error(`occupant ${k + 1}: off at ${t} without departure`);
+      }
+    });
+    eq(r.lightingStats.checks.offWhilePresent, 0); eq(r.lightingStats.checks.diUnlitWhilePresent, 0);
+  });
+  test("lights are only switched on while present", () => {
+    const m = model({ lux: bell.map((v) => v * 2) });
+    const r = m.runs[0];
+    r.lighting.forEach((L, k) => {
+      for (let t = 0; t < L.length; t++) if (L[t] && (t === 0 || !L[t - 1]) && !r.schedules[k][t]) throw new Error(`on while absent at ${t}`);
+    });
+  });
+  test("presence is identical whatever the lighting settings (share, illuminance)", () => {
+    const a = model({ shareDd: 0, lux: constLux(50) }).runs[0], b = model({ shareDd: 1, lux: constLux(5000) }).runs[0];
+    a.schedules.forEach((s, k) => assert(s.every((v, t) => v === b.schedules[k][t]), `occupant ${k + 1}`));
+  });
+  test("same seed → identical lighting; user types nest (Dd at 30 % ⊂ Dd at 60 %); 0 % / 100 % give pure types", () => {
+    const a = model({}).runs[0], b = model({}).runs[0];
+    a.lighting.forEach((L, k) => assert(L.every((v, t) => v === b.lighting[k][t]), `occupant ${k + 1}`));
+    const t30 = model({ shareDd: 0.3 }).types, t60 = model({ shareDd: 0.6 }).types;
+    t30.forEach((t, k) => assert(t !== "Dd" || t60[k] === "Dd", `occupant ${k + 1}`));
+    assert(model({ shareDd: 0 }).types.every((t) => t === "Di") && model({ shareDd: 1 }).types.every((t) => t === "Dd"), "pure");
+  });
+  test("Monte Carlo at 100 lx: arrival switch-on rate = Hunt P(100) = 0.321 within 4 SE (Dd, 1000 occupants)", () => {
+    const m = model({ shareDd: 1, nOccupants: 1000, lux: constLux(100) });
+    const r = m.runs[0];
+    let n = 0, on = 0;
+    r.schedules.forEach((s, k) => {
+      const L = r.lighting[k];
+      for (let t = 1; t < s.length; t++) if (s[t] && !s[t - 1] && !L[t - 1]) { n++; on += L[t]; }
+    });
+    const p = pArrivalSwitchOn(100), se = Math.sqrt(p * (1 - p) / n);
+    near(on / n, p, 4 * se, `n = ${n}:`);
+  });
+  test("Monte Carlo at 100 lx: hourly intermediate switch-on rate = 0.2124 within 4 SE", () => {
+    const m = model({ shareDd: 1, nOccupants: 1000, lux: constLux(100) });
+    const r = m.runs[0];
+    let n = 0, on = 0;
+    r.schedules.forEach((s, k) => {
+      const L = r.lighting[k];
+      for (let t = 1; t < s.length; t++) if (s[t] && s[t - 1] && !L[t - 1]) { n++; on += L[t]; }
+    });
+    const p = pIntermediateHourly(100), se = Math.sqrt(p * (1 - p) / n);
+    near(on / n, p, 4 * se, `n = ${n}:`);
+  });
+  test("Monte Carlo: switch-off rate at departure matches Fig. 3(c) per absence bin within 4 SE (Di, μ = 1)", () => {
+    const m = model({ shareDd: 0, mus: [1], nOccupants: 1000, lux: constLux(0) });
+    const r = m.runs[0];
+    const bins = new Map();
+    r.schedules.forEach((s, k) => {
+      const L = r.lighting[k], run = absenceRunLengths(s);
+      for (let t = 0; t < s.length - 1; t++) if (s[t] && !s[t + 1] && L[t]) {
+        const p = pSwitchOffAtDeparture(run[t + 1]);
+        const b = bins.get(p) || { n: 0, off: 0 }; b.n++; b.off += L[t + 1] ? 0 : 1; bins.set(p, b);
+      }
+    });
+    assert(bins.size >= 3, `only ${bins.size} bins observed`);
+    for (const [p, b] of bins) {
+      if (b.n < 200) continue;
+      near(b.off / b.n, p, 4 * Math.sqrt(p * (1 - p) / b.n) + 1e-9, `bin p = ${p}, n = ${b.n}:`);
+    }
+  });
+  test("μ split: user types and lighting streams are shared across μ, lit hours differ between μ", () => {
+    const m = model({ mus: [0.38, 0.67, 0.93], nOccupants: 200, lux: bell.map((v) => v * 2) });
+    const lit = m.runs.map((r) => r.lightingStats.All.litMean);
+    eq(m.runs.length, 3); assert(new Set(lit).size === 3, `lit ${lit}`);
+  });
+
+  // ================= Milestones 4–5: comparison cases and energy =================
+  test("fixed (Sveby), 1 Jan Wednesday: 261 weekdays × 9 h = 2349 h → 23.49 kWh/m²·yr at 10 W/m²", () => {
+    eq(countWeekdays(2), 261);
+    const h = sumSchedule(fixedLightingSchedule(2));
+    eq(h, 2349); near(lightingEnergyKwhPerM2(h, 10), 23.49, 1e-12);
+  });
+  test("fixed: 1 Jan Saturday → 260 weekdays → 2340 h; first hours of the year follow the weekday", () => {
+    eq(sumSchedule(fixedLightingSchedule(5)), 2340);
+    const wed = fixedLightingSchedule(2);
+    eq(wed[8], 1); eq(wed[7], 0); eq(wed[17], 0); eq(wed[16], 1); // Wed 1 Jan 08:00 on, 07:00 off, 17:00 off
+    eq(wed[3 * 24 + 10], 0); // Sat 4 Jan 10:00 off
+  });
+  test("deterministic: 0 lx → equals fixed; 1000 lx → 0 h; exactly 500 lx with setpoint 500 → 0 h (strictly below)", () => {
+    const fixed = fixedLightingSchedule(2);
+    const d0 = deterministicLightingSchedule(constLux(0), 2, 500);
+    assert(d0.every((v, t) => v === fixed[t]), "0 lx");
+    eq(sumSchedule(deterministicLightingSchedule(constLux(1000), 2, 500)), 0);
+    eq(sumSchedule(deterministicLightingSchedule(constLux(500), 2, 500)), 0);
+    eq(sumSchedule(deterministicLightingSchedule(constLux(499.9), 2, 500)), 2349);
+  });
+  test("deterministic on the bell year: 500 lx → 2 h per weekday (08 and 16 at 400 lx) = 522 h; 300 lx → 0 h", () => {
+    eq(sumSchedule(deterministicLightingSchedule(bell, 2, 500)), 522);
+    eq(sumSchedule(deterministicLightingSchedule(bell, 2, 300)), 0);
+  });
+  test("energy: 1000 h × 10 W/m² = 10 kWh/m²·yr = 186 kWh/yr for 18.6 m²; at 4 W/m² = 4", () => {
+    near(lightingEnergyKwhPerM2(1000, 10), 10, 1e-12); near(lightingEnergyKwhPerM2(1000, 10) * 18.6, 186, 1e-9);
+    near(lightingEnergyKwhPerM2(1000, 4), 4, 1e-12);
+  });
+  test("distribution of 1…10: mean 5.5, median 5.5, P10 1.9, P90 9.1, min 1, max 10", () => {
+    const d = distributionStats([7, 3, 10, 1, 5, 2, 9, 4, 8, 6]);
+    near(d.mean, 5.5); near(d.median, 5.5); near(d.p10, 1.9); near(d.p90, 9.1); eq(d.min, 1); eq(d.max, 10);
+  });
+  test("nice bin width (about 20 bins): range 23.5 → 2; 4.7 → 0.25; 230 → 20; 0 → 1", () => {
+    eq(niceBinWidth(23.5, 20), 2); eq(niceBinWidth(4.7, 20), 0.25); eq(niceBinWidth(230, 20), 20); eq(niceBinWidth(0), 1);
+  });
+  test("histogram: counts add up per type, edge values go to the upper bin, max is included", () => {
+    const h = typedHistogram([0, 1.99, 2, 4, 5.5], ["Dd", "Dd", "Di", "Di", "Dd"], 2, 5.5);
+    eq(h.nBins, 3); eq(h.counts.Dd.join(","), "2,0,1"); eq(h.counts.Di.join(","), "0,1,1");
+    eq(h.counts.Dd.reduce((a, b) => a + b) + h.counts.Di.reduce((a, b) => a + b), 5);
+  });
+  test("stochastic energy: Di at 0 lx is lit at least whenever present; Dd ≤ Di with daylight", () => {
+    const m0 = model({ shareDd: 0, lux: constLux(0), startWeekday: 2 });
+    m0.runs[0].litHours.forEach((h, k) => assert(h >= sumSchedule(m0.runs[0].schedules[k]), `occupant ${k + 1}`));
+    const m = model({ shareDd: 0.5, nOccupants: 200, lux: bell.map((v) => v * 2), startWeekday: 2 });
+    const s = m.runs[0].lightingStats;
+    assert(s.Dd.litMean < s.Di.litMean, `Dd ${s.Dd.litMean} vs Di ${s.Di.litMean}`);
+  });
+
+  // ================= Decomposition (ideal switching on own presence) =================
+  test("ideal switching: 0 lx → equals presence; 1000 lx → never; strictly below the setpoint", () => {
+    const pres = Uint8Array.from([0, 1, 1, 0, 1]);
+    eq(idealLightingSchedule(pres, [0, 0, 0, 0, 0], 500).join(""), "01101");
+    eq(idealLightingSchedule(pres, [0, 1000, 1000, 0, 1000], 500).join(""), "00000");
+    eq(idealLightingSchedule(pres, [0, 500, 499, 0, 300], 500).join(""), "00101");
+    eq(idealLitHours(pres, [0, 500, 499, 0, 300], 500), 2);
+  });
+  test("ideal ≤ deterministic for every occupant (Sveby presence lies inside the Sveby window)", () => {
+    const m = model({ nOccupants: 100, lux: bell.map((v) => v * 1.2), startWeekday: 2 });
+    const det = sumSchedule(deterministicLightingSchedule(bell.map((v) => v * 1.2), 2, 500));
+    m.runs[0].schedules.forEach((s, k) => assert(idealLitHours(s, bell.map((v) => v * 1.2), 500) <= det, `occupant ${k + 1}`));
+  });
+  test("decomposition: levels match the inputs and fixed + three effects = stochastic, per group", () => {
+    const d = decomposition({ fixedHours: 2349, detHours: 500, idealHours: [300, 400, 200], stochHours: [600, 2000, 900],
+      types: ["Dd", "Di", "Dd"], lpdWm2: 10 });
+    near(d.Dd.levels[0], 23.49); near(d.Dd.levels[1], 5); near(d.Dd.levels[2], 2.5); near(d.Dd.levels[3], 7.5);
+    near(d.Di.levels[2], 4); near(d.Di.levels[3], 20); eq(d.All.n, 3); near(d.All.levels[3], 3500 / 3 / 100);
+    for (const g of ["Dd", "Di", "All"]) near(d[g].levels[0] + d[g].daylight + d[g].presence + d[g].behaviour, d[g].levels[3], 1e-12, g);
+    const onlyDi = decomposition({ fixedHours: 1, detHours: 1, idealHours: [1], stochHours: [1], types: ["Di"], lpdWm2: 10 });
+    eq(onlyDi.Dd, null);
+  });
+
+  // ================= EU summer time =================
+  test("summer time, 1 Jan Wednesday (as 2025): 30 March (day 88) to 26 October (day 298), changes at 02:00 standard", () => {
+    const r = summerTimeRange(2);
+    eq(r.startDay, 88); eq(dateLabel(r.startDay), "30 Mar"); eq(r.endDay, 298); eq(dateLabel(r.endDay), "26 Oct");
+    eq(r.startHour, 88 * 24 + 2); eq(r.endHour, 298 * 24 + 2);
+    eq(clockIndex(88 * 24 + 1, r), 88 * 24 + 1); eq(clockIndex(88 * 24 + 2, r), 88 * 24 + 3);
+    eq(clockIndex(298 * 24 + 1, r), 298 * 24 + 2); eq(clockIndex(298 * 24 + 2, r), 298 * 24 + 2);
+  });
+  test("summer time, 1 Jan Monday (as 2018): 25 March to 28 October", () => {
+    const r = summerTimeRange(0);
+    eq(dateLabel(r.startDay), "25 Mar"); eq(dateLabel(r.endDay), "28 Oct");
+  });
+  test("presence profile: July weekday starts at standard hour 7 and ends after 15; January at 8 and after 16", () => {
+    const dst = summerTimeRange(2);
+    const P = annualPresenceProfile(SVEBY_OFFICE_PRESENCE, 2, dst);
+    const jul = 182 * 24;   // Wed 2 July
+    eq(P[jul + 6], 0); eq(P[jul + 7], 0.7); eq(P[jul + 15], 0.7); eq(P[jul + 16], 0);
+    const jan = 1 * 24;     // Thu 2 January
+    eq(P[jan + 7], 0); eq(P[jan + 8], 0.7); eq(P[jan + 16], 0.7); eq(P[jan + 17], 0);
+    const mon = 89 * 24, monOct = 299 * 24;   // Monday after each change
+    eq(P[mon + 7], 0.7); eq(P[monOct + 7], 0); eq(P[monOct + 8], 0.7);
+  });
+  test("summer time keeps the totals: Sveby profile 1644.3 h, fixed Sveby window 2349 h", () => {
+    const dst = summerTimeRange(2);
+    let s = 0; for (const v of annualPresenceProfile(SVEBY_OFFICE_PRESENCE, 2, dst)) s += v;
+    near(s, 1644.3, 1e-9); eq(sumSchedule(fixedLightingSchedule(2, dst)), 2349);
+    const f = fixedLightingSchedule(2, dst);
+    eq(f[182 * 24 + 7], 1); eq(f[182 * 24 + 16], 0); eq(f[1 * 24 + 7], 0); eq(f[1 * 24 + 16], 1);
+  });
+  test("deterministic case follows the shifted window (0 lx: equals the shifted fixed schedule)", () => {
+    const dst = summerTimeRange(2);
+    const f = fixedLightingSchedule(2, dst), d = deterministicLightingSchedule(constLux(0), 2, 500, dst);
+    assert(d.every((v, t) => v === f[t]), "same as fixed");
+  });
+  test("simulation with summer time: in July never present at standard 16:00, converges in clock time", () => {
+    const m = runModel({ weekdayProfile: SVEBY_OFFICE_PRESENCE, startWeekday: 2, mus: [0.38], seed: 3, nOccupants: 400,
+      shareDd: 0.5, summerTime: true }, null);
+    const r = m.runs[0];
+    let at7 = 0;
+    r.schedules.forEach((s) => { for (let d = 181; d < 212; d++) { if (s[d * 24 + 16]) throw new Error(`present at 16:00 on day ${d}`); at7 += s[d * 24 + 7]; } });
+    assert(at7 > 0, "someone present at standard 07:00 in July");
+    assert(r.convergence.ok, `clock-time convergence failed at ${r.convergence.failedHours.map(hourLabel)}`);
+  });
+
+  // ================= Milestone 6: export =================
+  test("CRC-32 check value: crc32('123456789') = cbf43926", () => {
+    eq(crc32(new TextEncoder().encode("123456789")).toString(16), "cbf43926");
+  });
+  test("schedule CSV: header + 8760 rows, one column per occupant, 0/1 values round-trip", () => {
+    const m = model({ nOccupants: 7, startWeekday: 2 });
+    const r = m.runs[0];
+    const csv = schedulesCsv(r.lighting, occupantIds(m.types));
+    const lines = csv.split("\r\n");
+    eq(lines.length, 8762, "lines incl. trailing empty"); eq(lines[8761], "");
+    eq(lines[0].split(",").length, 7); assert(/^occ001_D[di],occ002_D[di]/.test(lines[0]), lines[0]);
+    for (let t = 0; t < 8760; t++) {
+      const cells = lines[t + 1].split(",");
+      for (let k = 0; k < 7; k++) if (Number(cells[k]) !== r.lighting[k][t]) throw new Error(`mismatch at row ${t + 2}, occupant ${k + 1}`);
+    }
+  });
+  test("occupant ids: 3 digits up to 999, 4 digits from 1000", () => {
+    eq(occupantIds(["Dd", "Di"]).join(","), "occ001_Dd,occ002_Di");
+    eq(occupantIds(new Array(1000).fill("Dd"))[999], "occ1000_Dd");
+  });
+  test("average CSV: labelled header, hourly mean with 4 decimals", () => {
+    const s = [Uint8Array.from([1, 0, 1]), Uint8Array.from([1, 0, 0]), Uint8Array.from([0, 0, 1])];
+    const lines = averageScheduleCsv(s, "AVERAGE_of_3_occupants_lighting_fraction").split("\r\n");
+    eq(lines[0], "AVERAGE_of_3_occupants_lighting_fraction"); eq(lines[1], "0.6667"); eq(lines[2], "0.0000"); eq(lines[3], "0.6667");
+  });
+  test("CSV quoting: commas and quotes are escaped", () => {
+    eq(csvTable(["a", "b"], [["x,y", 'say "hi"']]), 'a,b\r\n"x,y","say ""hi"""\r\n');
+  });
+  test("ZIP: two files read back with correct names, sizes, CRCs and contents (stored, UTF-8 names)", () => {
+    const files = [{ name: "a.csv", text: "1,0\r\n0,1\r\n" }, { name: "μ_test.txt", text: "hej Malmö" }];
+    const zip = makeZip(files, new Date(2026, 9, 20, 10, 30, 0));
+    const dv = new DataView(zip.buffer), dec = new TextDecoder();
+    eq(dv.getUint32(zip.length - 22, true), 0x06054b50, "EOCD signature"); eq(dv.getUint16(zip.length - 12, true), 2, "entries");
+    let p = 0;
+    for (const f of files) {
+      eq(dv.getUint32(p, true), 0x04034b50, "local header");
+      const crc = dv.getUint32(p + 14, true), size = dv.getUint32(p + 18, true), nlen = dv.getUint16(p + 26, true);
+      const name = dec.decode(zip.subarray(p + 30, p + 30 + nlen));
+      const data = zip.subarray(p + 30 + nlen, p + 30 + nlen + size);
+      eq(name, f.name); eq(dec.decode(data), f.text); eq(crc, crc32(new TextEncoder().encode(f.text)));
+      p += 30 + nlen + size;
+    }
+    eq(dv.getUint32(p, true), 0x02014b50, "central directory follows the data");
   });
 
   return results;

@@ -1,0 +1,389 @@
+{
+  "energyplus_engine": "pyenergyplus-lbnl (EnergyPlus 25.2.0 API)",
+  "export": "case-study_schedules_seed12345.zip",
+  "start_weekday": "Wednesday",
+  "schedules_tested": [
+    "LIGHT_occ001_Di",
+    "OCC_occ001_Di",
+    "LIGHT_occ002_Dd",
+    "OCC_occ002_Dd",
+    "LIGHT_occ050_Di",
+    "OCC_occ050_Di",
+    "LIGHT_occ100_Dd",
+    "OCC_occ100_Dd",
+    "REF_FIXED",
+    "REF_DETERMINISTIC"
+  ],
+  "runs": {
+    "A_no_dst": {
+      "exit_code": 0,
+      "rows": 8760,
+      "severe_or_fatal": [],
+      "columns": {
+        "LIGHT_OCC001_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC001_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC002_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC002_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC050_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC050_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC100_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC100_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "REF_FIXED": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "REF_DETERMINISTIC": {
+          "hours_differing": 0,
+          "first_differences": []
+        }
+      },
+      "lights_kwh_occ1": 358.146,
+      "expected_kwh_occ1": 358.146,
+      "day_type_mismatches": 0,
+      "dst_hours_in_model": 0,
+      "dst_first_last_eplus_time": null,
+      "sample_rows": [
+        "01/01  01:00:00",
+        "01/01  08:00:00",
+        "01/01  09:00:00",
+        "07/01  24:00:00"
+      ]
+    },
+    "B_dst_adjust_no": {
+      "exit_code": 0,
+      "rows": 8760,
+      "severe_or_fatal": [],
+      "columns": {
+        "LIGHT_OCC001_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC001_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC002_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC002_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC050_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC050_DI": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "LIGHT_OCC100_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "OCC_OCC100_DD": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "REF_FIXED": {
+          "hours_differing": 0,
+          "first_differences": []
+        },
+        "REF_DETERMINISTIC": {
+          "hours_differing": 0,
+          "first_differences": []
+        }
+      },
+      "lights_kwh_occ1": 358.146,
+      "expected_kwh_occ1": 358.146,
+      "day_type_mismatches": 0,
+      "dst_hours_in_model": 5064,
+      "dst_first_last_eplus_time": [
+        "03/30  01:00:00",
+        "10/26  24:00:00"
+      ],
+      "sample_rows": [
+        "01/01  01:00:00",
+        "01/01  08:00:00",
+        "01/01  09:00:00",
+        "07/01  24:00:00"
+      ]
+    },
+    "C_dst_adjust_yes": {
+      "exit_code": 0,
+      "rows": 8760,
+      "severe_or_fatal": [],
+      "columns": {
+        "LIGHT_OCC001_DI": {
+          "hours_differing": 402,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2152,
+              "eplus_time": "03/31  16:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2167,
+              "eplus_time": "04/01  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "OCC_OCC001_DI": {
+          "hours_differing": 490,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2145,
+              "eplus_time": "03/31  09:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2146,
+              "eplus_time": "03/31  10:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "LIGHT_OCC002_DD": {
+          "hours_differing": 68,
+          "first_differences": [
+            {
+              "row": 2319,
+              "eplus_time": "04/07  15:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2320,
+              "eplus_time": "04/07  16:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2407,
+              "eplus_time": "04/11  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "OCC_OCC002_DD": {
+          "hours_differing": 492,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2145,
+              "eplus_time": "03/31  09:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2146,
+              "eplus_time": "03/31  10:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "LIGHT_OCC050_DI": {
+          "hours_differing": 410,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2151,
+              "eplus_time": "03/31  15:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2167,
+              "eplus_time": "04/01  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "OCC_OCC050_DI": {
+          "hours_differing": 484,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2149,
+              "eplus_time": "03/31  13:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2150,
+              "eplus_time": "03/31  14:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "LIGHT_OCC100_DD": {
+          "hours_differing": 82,
+          "first_differences": [
+            {
+              "row": 2219,
+              "eplus_time": "04/03  11:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2224,
+              "eplus_time": "04/03  16:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2242,
+              "eplus_time": "04/04  10:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "OCC_OCC100_DD": {
+          "hours_differing": 496,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2144,
+              "eplus_time": "03/31  08:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2145,
+              "eplus_time": "03/31  09:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "REF_FIXED": {
+          "hours_differing": 300,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2152,
+              "eplus_time": "03/31  16:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2167,
+              "eplus_time": "04/01  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        },
+        "REF_DETERMINISTIC": {
+          "hours_differing": 364,
+          "first_differences": [
+            {
+              "row": 2143,
+              "eplus_time": "03/31  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            },
+            {
+              "row": 2146,
+              "eplus_time": "03/31  10:00:00",
+              "csv": 1.0,
+              "eplus": 0.0
+            },
+            {
+              "row": 2167,
+              "eplus_time": "04/01  07:00:00",
+              "csv": 0.0,
+              "eplus": 1.0
+            }
+          ]
+        }
+      },
+      "lights_kwh_occ1": 358.146,
+      "expected_kwh_occ1": 358.146,
+      "day_type_mismatches": 0,
+      "dst_hours_in_model": 5064,
+      "dst_first_last_eplus_time": [
+        "03/30  01:00:00",
+        "10/26  24:00:00"
+      ],
+      "sample_rows": [
+        "01/01  01:00:00",
+        "01/01  08:00:00",
+        "01/01  09:00:00",
+        "07/01  24:00:00"
+      ]
+    }
+  }
+}

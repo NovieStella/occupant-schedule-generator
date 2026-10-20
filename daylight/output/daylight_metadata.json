@@ -1,0 +1,232 @@
+{
+  "created": "2026-10-20T18:42:01.142169+00:00",
+  "purpose": "Daylight input for the Occupant Schedule Generator case study",
+  "room": {
+    "width_m": 3.05,
+    "depth_m": 6.1,
+    "height_m": 2.74
+  },
+  "orientation": "facade faces due south (-Y), north = +Y",
+  "reflectance": {
+    "ceiling": 0.8,
+    "walls": 0.5,
+    "floor": 0.2
+  },
+  "ground_albedo": 0.2,
+  "glazing": {
+    "visual_transmittance": 0.72,
+    "radiance_material": [
+      "void",
+      "glass",
+      "glazing_vt72",
+      "0",
+      "0",
+      "3",
+      "0.7845895463548568",
+      "0.7845895463548568",
+      "0.7845895463548568"
+    ]
+  },
+  "window_panes_m_x0_x1_z0_z1": [
+    [
+      0.07,
+      0.97,
+      0.82,
+      1.91
+    ],
+    [
+      1.065,
+      1.965,
+      0.82,
+      1.91
+    ],
+    [
+      2.055,
+      2.955,
+      0.82,
+      1.91
+    ],
+    [
+      0.07,
+      0.97,
+      2.01,
+      2.62
+    ],
+    [
+      1.065,
+      1.965,
+      2.01,
+      2.62
+    ],
+    [
+      2.055,
+      2.955,
+      2.01,
+      2.62
+    ]
+  ],
+  "glazed_area_m2": 4.59,
+  "facade_area_m2": 8.357,
+  "sensors": {
+    "x_m": 1.525,
+    "z_m": 0.8,
+    "depths_m": [
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0,
+      5.5,
+      6.0
+    ],
+    "direction": "up"
+  },
+  "source": "Reinhart (2004) Solar Energy 77, 15-28, section 3.1 and Fig. 5; window digitised from Fig. 5(a)",
+  "not_modelled": [
+    "blinds (out of scope v1)",
+    "furniture",
+    "window frames depth and wall thickness (zero-thickness walls)",
+    "external obstructions (none, as in Reinhart 2004)"
+  ],
+  "weather": {
+    "file": "malmo.epw",
+    "latitude": 55.5714,
+    "longitude_radiance_west_positive": -13.0736,
+    "standard_meridian_radiance_west_positive": -15.0,
+    "daylight_saving": "none (standard time)"
+  },
+  "method": "two-phase daylight coefficients with exact direct sun: DC_total(ab6) x sky - DC_direct(ab1) x sun-only sky + sun(ab0)",
+  "sky_model": "Perez all-weather (gendaymtx, gendaylit), Tregenza 145 patches + ground",
+  "radiance_parameters": {
+    "dc_total": "-ab 6 -ad 65536 -lw 1.5e-5",
+    "dc_direct": "-ab 1 -ad 65536 -lw 1.5e-5",
+    "sun": "-ab 0 -dc 1 -dt 0 -dj 0 -ds 0 -lw 1e-7"
+  },
+  "sun_positions": 3733,
+  "daylight_factor": {
+    "sky": "CIE standard overcast, 10 000 lx unobstructed horizontal illuminance from the sky, ground albedo 0.2",
+    "dc": "daylight coefficients (dc_total) x CIE overcast luminance at Tregenza patch centres",
+    "rtrace_check": "gensky -c -B 55.866 with sky and ground glow; rtrace -ab 5 -ad 2048 -as 1024 -aa 0.1 -ar 256 -lw 1e-4"
+  },
+  "software": {
+    "radiance": "RADIANCE 6.0a",
+    "pyradiance": "1.3.0",
+    "honeybee-radiance": "1.66.296"
+  },
+  "results_by_depth": [
+    {
+      "depth_m": 0.5,
+      "df_percent_dc": 19.66,
+      "df_percent_rtrace": 19.57,
+      "annual_mean_lux": 5140.5,
+      "daylit_mean_lux": 9793.6,
+      "daylit_hours": 4598,
+      "max_lux": 52835.7
+    },
+    {
+      "depth_m": 1.0,
+      "df_percent_dc": 13.08,
+      "df_percent_rtrace": 13.17,
+      "annual_mean_lux": 3909.0,
+      "daylit_mean_lux": 7447.4,
+      "daylit_hours": 4598,
+      "max_lux": 51567.0
+    },
+    {
+      "depth_m": 1.5,
+      "df_percent_dc": 8.54,
+      "df_percent_rtrace": 8.52,
+      "annual_mean_lux": 2309.2,
+      "daylit_mean_lux": 4399.5,
+      "daylit_hours": 4598,
+      "max_lux": 48350.3
+    },
+    {
+      "depth_m": 2.0,
+      "df_percent_dc": 5.69,
+      "df_percent_rtrace": 5.8,
+      "annual_mean_lux": 1473.2,
+      "daylit_mean_lux": 2806.8,
+      "daylit_hours": 4598,
+      "max_lux": 43292.7
+    },
+    {
+      "depth_m": 2.5,
+      "df_percent_dc": 3.94,
+      "df_percent_rtrace": 3.95,
+      "annual_mean_lux": 1085.6,
+      "daylit_mean_lux": 2068.3,
+      "daylit_hours": 4598,
+      "max_lux": 35095.4
+    },
+    {
+      "depth_m": 3.0,
+      "df_percent_dc": 2.9,
+      "df_percent_rtrace": 2.92,
+      "annual_mean_lux": 771.1,
+      "daylit_mean_lux": 1469.1,
+      "daylit_hours": 4598,
+      "max_lux": 30023.3
+    },
+    {
+      "depth_m": 3.5,
+      "df_percent_dc": 2.16,
+      "df_percent_rtrace": 2.14,
+      "annual_mean_lux": 589.4,
+      "daylit_mean_lux": 1123.0,
+      "daylit_hours": 4598,
+      "max_lux": 26441.0
+    },
+    {
+      "depth_m": 4.0,
+      "df_percent_dc": 1.67,
+      "df_percent_rtrace": 1.66,
+      "annual_mean_lux": 456.8,
+      "daylit_mean_lux": 870.2,
+      "daylit_hours": 4598,
+      "max_lux": 22969.5
+    },
+    {
+      "depth_m": 4.5,
+      "df_percent_dc": 1.38,
+      "df_percent_rtrace": 1.34,
+      "annual_mean_lux": 366.0,
+      "daylit_mean_lux": 697.2,
+      "daylit_hours": 4598,
+      "max_lux": 18297.8
+    },
+    {
+      "depth_m": 5.0,
+      "df_percent_dc": 1.16,
+      "df_percent_rtrace": 1.13,
+      "annual_mean_lux": 291.9,
+      "daylit_mean_lux": 556.0,
+      "daylit_hours": 4598,
+      "max_lux": 17886.5
+    },
+    {
+      "depth_m": 5.5,
+      "df_percent_dc": 1.02,
+      "df_percent_rtrace": 1.04,
+      "annual_mean_lux": 258.1,
+      "daylit_mean_lux": 491.8,
+      "daylit_hours": 4598,
+      "max_lux": 14952.7
+    },
+    {
+      "depth_m": 6.0,
+      "df_percent_dc": 1.05,
+      "df_percent_rtrace": 1.01,
+      "annual_mean_lux": 285.3,
+      "daylit_mean_lux": 543.6,
+      "daylit_hours": 4598,
+      "max_lux": 13177.6
+    }
+  ],
+  "runtime_s": 126.6
+}

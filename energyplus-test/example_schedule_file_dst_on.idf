@@ -1,0 +1,57 @@
+Version,25.2;
+SimulationControl,No,No,No,No,Yes,No,1;
+Building,ScheduleFileTest,0,Suburbs,0.04,0.4,FullExterior,25,6;
+Timestep,4;
+GlobalGeometryRules,UpperLeftCorner,Counterclockwise,Relative;
+Site:Location,Malmo,55.57140,13.07360,1.0,20.8;
+RunPeriod,Year,1,1,,12,31,,Wednesday,No,No,No,Yes,Yes;
+Material,Concrete200,Rough,0.2,1.95,2240,900,0.9,0.7,0.7;
+Construction,C1,Concrete200;
+Zone,Office;
+ScheduleTypeLimits,Fraction,0,1,Continuous;
+RunPeriodControl:DaylightSavingTime,Last Sunday in March,Last Sunday in October;
+BuildingSurface:Detailed,Floor,Floor,C1,Office,,Ground,,NoSun,NoWind,,4,
+    0,0,0,
+    0,6.1,0,
+    3.05,6.1,0,
+    3.05,0,0;
+BuildingSurface:Detailed,Roof,Roof,C1,Office,,Outdoors,,SunExposed,WindExposed,,4,
+    0,0,2.74,
+    3.05,0,2.74,
+    3.05,6.1,2.74,
+    0,6.1,2.74;
+BuildingSurface:Detailed,WallS,Wall,C1,Office,,Outdoors,,SunExposed,WindExposed,,4,
+    0,0,2.74,
+    0,0,0,
+    3.05,0,0,
+    3.05,0,2.74;
+BuildingSurface:Detailed,WallN,Wall,C1,Office,,Outdoors,,SunExposed,WindExposed,,4,
+    3.05,6.1,2.74,
+    3.05,6.1,0,
+    0,6.1,0,
+    0,6.1,2.74;
+BuildingSurface:Detailed,WallE,Wall,C1,Office,,Outdoors,,SunExposed,WindExposed,,4,
+    3.05,0,2.74,
+    3.05,0,0,
+    3.05,6.1,0,
+    3.05,6.1,2.74;
+BuildingSurface:Detailed,WallW,Wall,C1,Office,,Outdoors,,SunExposed,WindExposed,,4,
+    0,6.1,2.74,
+    0,6.1,0,
+    0,0,0,
+    0,0,2.74;
+Schedule:File,LIGHT_occ001_Di,Fraction,lighting_mu0.38.csv,1,1,8760,Comma,No,60,No;
+Schedule:File,OCC_occ001_Di,Fraction,occupancy_mu0.38.csv,1,1,8760,Comma,No,60,No;
+Schedule:File,LIGHT_occ002_Dd,Fraction,lighting_mu0.38.csv,2,1,8760,Comma,No,60,No;
+Schedule:File,OCC_occ002_Dd,Fraction,occupancy_mu0.38.csv,2,1,8760,Comma,No,60,No;
+Schedule:File,LIGHT_occ050_Di,Fraction,lighting_mu0.38.csv,50,1,8760,Comma,No,60,No;
+Schedule:File,OCC_occ050_Di,Fraction,occupancy_mu0.38.csv,50,1,8760,Comma,No,60,No;
+Schedule:File,LIGHT_occ100_Dd,Fraction,lighting_mu0.38.csv,100,1,8760,Comma,No,60,No;
+Schedule:File,OCC_occ100_Dd,Fraction,occupancy_mu0.38.csv,100,1,8760,Comma,No,60,No;
+Schedule:File,REF_FIXED,Fraction,reference_fixed_and_deterministic.csv,1,1,8760,Comma,No,60,No;
+Schedule:File,REF_DETERMINISTIC,Fraction,reference_fixed_and_deterministic.csv,2,1,8760,Comma,No,60,No;
+Lights,Lights_occ1,Office,LIGHT_occ001_Di,Watts/Area,,10.0,,0,0.32,0.25,1,General;
+Output:Variable,*,Schedule Value,Hourly;
+Output:Variable,*,Lights Electricity Energy,Hourly;
+Output:Variable,*,Site Day Type Index,Hourly;
+Output:Variable,*,Site Daylight Saving Time Status,Hourly;

@@ -26,7 +26,9 @@ This tool uses **published, validated stochastic models** to generate many plaus
 - Lighting behavior only
 - Three cases compared:
   1. **Fixed schedule:** standard profile (Sveby office values, supplied by Stella)
-  2. **Deterministic threshold:** lights on when occupied AND illuminance < setpoint (e.g. 300 or 500 lx, user-set)
+  2. **Deterministic threshold:** lights on when occupied AND illuminance < setpoint (500 lx default, 300 lx option). ASSUMPTION (milestone 5): "occupied" = the Sveby working window (weekdays 08:00–17:00, full presence), so this case differs from the fixed schedule only through daylight.
+  2b. **Ideal switching on own presence** (added 2026-10-20): lights on exactly when the stochastic occupant is present AND illuminance < setpoint.
+- **Four-step decomposition** (kWh/m²·yr, waterfall chart, split by user type): (1) fixed Sveby → (2) deterministic, full occupancy = *daylight effect* → (3) ideal switching on own presence = *presence effect* → (4) stochastic Dd/Di = *behaviour effect*. Steps are sequential; a different order would attribute interactions differently.
   3. **Stochastic:** presence model + illuminance-based switching probabilities
 
 ### v2 (later)
@@ -58,14 +60,28 @@ This tool uses **published, validated stochastic models** to generate many plaus
 - Time step: hourly. The paper used 15 minutes and gives no numeric μ values (Fig. 5: measured μ mostly well below 0.5 at 15 min). μ is a user input, labelled "hourly time step, not from paper". Sensitivity option: 3 μ values. The tool shows the 15-minute μ with the same hour-to-hour persistence (valid where P is constant) for orientation.
 - Long absences (holidays, sick leave): not in v1.
 
+### Lighting model as implemented (milestone 3, agreed with Stella 2026-10-20)
+- Algorithm: Reinhart (2004), Solar Energy 77, 15–28, section 2.1, Fig. 2, Table 1, without blinds. Per hour: arrival with lights off → arrival switch-on; present with lights off → intermediate switch-on; no switch-off while present (section 2.4); departure with lights on → switch-off by length of the coming absence (known from the presence series). Lights not switched off stay on through the absence. Lights off at 00:00 on 1 January.
+- **Arrival, Dd users:** Hunt (1979), Building and Environment 14, 21–33, section 5.2.4, Fig. 9(d): pooled probit line, median 1.82 log₁₀ lux (≈ 67 lx), slope −2.58 per log₁₀ lux, r = −0.82, χ² = 107, n = 213; predictor minimum working-plane illuminance. P = Φ(−2.58·(log₁₀E − 1.82)), P = 1 at E = 0. No clamp or floor. Φ via erf from Abramowitz & Stegun (1964) formula 7.1.26 (|error| ≤ 1.5 × 10⁻⁷). Replaces the digitised Fig. 3(a) fit, which is kept only as a comparison test (agrees within 0.007 from 8 to 500 lx).
+- **Arrival, Di users:** P = 1 (Reinhart 2004, Fig. 3(a), Table 2).
+- **Dd/Di share:** user input, default 50 % (Reinhart's equal shares; real buildings are polarised). Each occupant's type is drawn once from its own random stream.
+- **Intermediate switch-on:** Reinhart (2004) Fig. 3(b), printed formula garbled; reconstructed and checked against the plotted curve as P₅ = 0.0027 + 0.017 / (1 + exp(64.19·(log₁₀E − 2.41))), P₅ = 1 at E = 0. ASSUMPTION: hourly = 1 − (1 − P₅)¹² (constant illuminance within the hour).
+- **Switch-off at departure:** Reinhart (2004) Fig. 3(c), "no controls", digitised (± 0.003): < 30 min 0.088, 30–59 min 0.315, 1–2 h 0.389, 2–4 h 0.602, 4–12 h 0.962, 12–24 h 0.990, 24 h + 0.990. ASSUMPTION (hourly): an absence of n whole hours uses the bin containing n, lower edge inclusive; absences past 31 December count as 24 h +.
+- **Illuminance input:** the single sensor value stands in for the minimum work-plane illuminance (ASSUMPTION).
+- Results are reported per μ (3 default values) and per user type; user types and lighting random numbers are shared across μ, so differences come from presence only.
+- Sanity reference: Reinhart (2004) Toronto south office, 15 W/m², with blinds, 2 197 occupied h/yr: 10–39 kWh/m²·yr by user type, mean 27.2 (Eq. 1).
+
 ## 5. Inputs
 
 - **Illuminance CSV:** 8760 rows, one column, work-plane illuminance in lux. Exported from Climate Studio or Honeybee annual daylight. Use one sensor point or the zone average, and preprocess to a single column.
 - **Presence profile:** 24 hourly weekday presence probabilities. Default Sveby (2010), *Brukarindata kontor*: P = 0.70 on weekdays 08:00–17:00 (9 hours), 0 otherwise. Weekends absent in v1. Public holidays: v2.
-- **Calendar:** weekday of 1 January is a setting and must match "Day of Week for Start Day" in the IDF RunPeriod (Stella to confirm).
+- **Calendar:** weekday of 1 January is a setting and must match "Day of Week for Start Day" in the IDF RunPeriod. Default Wednesday (Stella's simulation, confirmed 2026-10-20).
 - **Model coefficients:** from the papers in section 4.
 - **Settings:** number of occupants (default 100), random seed, illuminance setpoint for the deterministic case, lighting power density (W/m²), floor area.
-- **Fixed schedule:** Sveby (2010), ch. 8: lighting on 100 % on weekdays 08:00–17:00 regardless of daylight or presence, 7.6 W/m² average (Table 8.6).
+- **Setpoint (deterministic case):** 500 lx default (EN 12464-1, office desk work; also Reinhart 2004's setpoint); 300 lx option (low end of Sveby Table 8.1).
+- **LPD:** the same for all three cases, so the comparison isolates behaviour. 10 W/m² (Sveby Table 8.1, cell office). Optional sensitivity 4 W/m² (Sveby Table B3.4, efficient/LED office rooms). Not 7.6 W/m², which is Sveby's building average including corridors (Table B3.4: 0.6 × 10 + 0.4 × 4).
+- **Floor area:** 18.6 m², the case-study room (Reinhart 2004: 3.05 × 6.1 m). Corrected 2026-10-20 from 10.8 m² (an earlier Grasshopper model); only absolute kWh/yr depend on it, never kWh/m²·yr.
+- **Fixed schedule:** Sveby (2010), ch. 8: lighting on 100 % on weekdays 08:00–17:00 regardless of daylight or presence.
 
 ## 6. Outputs
 
@@ -74,6 +90,10 @@ This tool uses **published, validated stochastic models** to generate many plaus
 - **Format:** plain CSV, 8760 rows (row 1 = 1 January 00:00–01:00, non-leap year, standard time without daylight saving), **one column per occupant**, comma separator, point decimal, one header row with occupant IDs. Lighting and occupancy in separate files.
 - **Target tools:** Honeybee / EnergyPlus `Schedule:File` (one object per occupant, using *Column Number* and *Rows to Skip at Top = 1*), IES VE free-form profiles, and IDA ICE. The exact import requirements of IES VE and IDA ICE (header row, time column, separator, decimal sign) are verified against each tool's documentation in milestone 6. A tool-specific variant is added only if the plain CSV does not import.
 - **Optional averaged fractional schedule** for multi-occupant zones: the hourly mean of the N individual 0/1 schedules (values 0–1). Clearly labelled as an average in both the file name and the header (e.g. `lighting_AVERAGE_of_100_occupants.csv`). It represents the fraction of individually controlled luminaire groups that are on (or the fraction of occupants present). It is not the same as one shared luminaire that any occupant can switch on, and it smooths out the individual variability this tool exists to show.
+
+- **As built (milestone 6, 2026-10-20):** one ZIP, written in plain JavaScript (stored entries, CRC-32, PKWARE APPNOTE format, verified with Python `zipfile`). Contents: `occupancy_mu<μ>.csv` and `lighting_mu<μ>.csv` per μ (header `occ001_Dd`, …), optional `*_AVERAGE_of_<N>_occupants_*.csv`, `reference_fixed_and_deterministic.csv`, `summary_cases.csv`, `summary_occupants.csv`, `metadata.json` (seed, settings, all coefficients with sources, μ-forcing log, decomposition, assumptions, input file name and CRC-32), `README.txt` (Schedule:File settings). Windows line endings (ASSUMPTION).
+- **Time convention (decided 2026-10-20):** everything stays in standard time (UTC+1), including the illuminance. During EU summer time (Directive 2000/84/EC: last Sunday of March to last Sunday of October, changes at 02:00 standard time) the presence profile and the fixed Sveby window are shifted one hour earlier in standard time (08:00–17:00 clock = 07:00–16:00 standard); the illuminance is not shifted. EnergyPlus: *Adjust Schedule for Daylight Savings = No*. Reinhart (2004, section 3.1) also applied daylight saving time to occupancy. Presence validation and the hour-of-day charts are in clock time.
+- **Import (2026-10-20):** EnergyPlus 25.2.0 `Schedule:File` **tested**: 10 schedules × 8760 h read exactly, with and without daylight saving in the model (`Adjust Schedule for Daylight Savings = No`); lights energy equals lit hours × LPD × area; day types match (`energyplus-test/`). Honeybee, IES VE and IDA ICE: expected to work, not yet tested (Honeybee waits for Stella's Rhino licence).
 
 ### Results
 - Summary table: annual lighting on-hours and kWh/m² per case
@@ -99,11 +119,28 @@ This is a fast first-order comparison. Full heating/cooling interaction is check
 1. Layout + CSV upload + illuminance preview chart
 2. Seeded PRNG + presence model + validation test
 3. Lighting switching models + known-answer tests
-4. Multi-occupant runs + statistics + histogram
-5. Fixed and deterministic comparison cases
+4. Multi-occupant runs + statistics + histogram (built together with 5)
+5. Fixed and deterministic comparison cases (built together with 4)
 6. CSV export (schedules + summary + metadata)
-7. Polish, mobile check, short method note on the page with citations
+7. Polish, mobile check, short method note on the page with citations (done 2026-10-20: "Method, sources and limitations" section, v1.0)
 8. Run exported schedules in Honeybee for one case study → LinkedIn post
+
+## 9b. Case-study daylight model (added 2026-10-20)
+
+Because the Rhino licence expired, the daylight input is simulated in the workspace with honeybee-radiance and Radiance 6.0a (via pyradiance), script `daylight/simulate_reinhart_office.py`, results and full set-up in `daylight/output/daylight_metadata.json`.
+- Room: Reinhart (2004) reference office, section 3.1 and Fig. 5: 3.05 m wide × 6.1 m deep × 2.74 m high, facade due south, no external obstructions, ground albedo 20 %. Reflectances ceiling 80 %, walls 50 %, floor 20 %. Double low-e glazing, visual transmittance 72 % (Radiance glass transmissivity 0.785). No blinds.
+- Window: six panes digitised from Fig. 5(a): main row 0.82–1.91 m, upper row 2.01–2.62 m, each pane 0.90 m wide; 4.58 m² glazing, 55 % of the facade. Zero-thickness walls, no furniture, no frame depth.
+- Sensors: room centre line, 0.8 m high, every 0.5 m from the window (0.5–6.0 m), facing up.
+- Weather: Malmö TMYx EPW (55.57 N, 13.07 E, UTC+1, standard time).
+- Method: two-phase daylight coefficients with exact direct sun, as in the Ladybug Tools annual-daylight recipe: DC_total(-ab 6) × sky − DC_direct(-ab 1) × sun-only sky + sun(-ab 0, one 0.533° disc per sun-up hour). Perez all-weather sky (gendaymtx, gendaylit), Tregenza 145 patches + ground, -ad 65536 -lw 1.5e-5.
+- Checks before use: daylight factor at 1.5 m close to Reinhart's 11 %; tool timing check passes; illuminance falls with depth.
+- Case-study input: the sensor 4.5 m from the window, 8760-row CSV (`daylight/output/illuminance_4.5m.csv`).
+- **Checks on the DF gap (2026-10-20, `daylight/checks_daylight_factor.py`):** glass transmissivity 0.7846 converted from VT 0.72, measured normal-incidence transmittance in Radiance 0.7200; DF at 1.5 m converged (8.55–8.58 % for -ab 6 to 12). Neither explains the gap.
+- **Results (2026-10-20):** DF at 1.5 m = 8.5 % (daylight coefficients 8.54 %, rtrace 8.52 %) against Reinhart's 11 %. Variants: no frames 9.6 %; one frameless pane from the sill to the ceiling 10.9 %, which contradicts Fig. 5(a). Geometry kept as drawn; the gap is reported in the method note. Timing check passes at all sensors (peak in the 12:00 interval). Illuminance falls with depth to 5.5 m; slight rise at 6.0 m next to the back wall (low winter sun, back-wall reflection). 4.5 m point: daylit mean 697 lx over 4 598 h, DF 1.4 %, 64 % of 08:00–17:00 hours ≥ 500 lx.
+
+## 9c. Case-study result (final run 2026-10-20, `case-study/`)
+
+100 occupants, seed 12345, μ = 0.38/0.67/0.93, 50 % Dd, 500 lx, 10 W/m², 1 January a Wednesday, summer time on. At μ = 0.38: fixed 23.5 → deterministic 8.7 → ideal 6.0 → Dd 6.1 / Di 18.2 kWh/m²·yr. **Headline:** at a realistic desk, daylight-using occupants behave close to ideal switching and about 99 % of the behaviour effect comes from occupants who ignore daylight. Dd "close to ideal" is a net of lights left on (+) and dim hours tolerated (−); at higher μ Dd is slightly below ideal (5.9, 5.8). Plausibility: Reinhart's DdBd 9.6 kWh/m²·yr at 15 W/m² ≈ 6.4 at 10 W/m².
 
 ## 10. Method note (milestone 7): content to include
 
@@ -111,6 +148,19 @@ This is a fast first-order comparison. Full heating/cooling interaction is check
 - Limitation: no long absences in v1. The Swedish July holiday falls in the high-daylight months, so its effect on lighting energy is small.
 - Limitation: hourly time step; μ is not taken from the paper (see section 4).
 - Limitation: weekends absent, no public holidays.
+- Scope: private or two-person offices only (Reinhart 2004). Not open-plan offices, where occupants have no perception of personal control.
+- Hunt (1979) data came from UK multi-person offices and classrooms, with illuminance estimated from external data and daylight factors; Reinhart (2004) adopted the curve for private offices. Hunt says "less than 1%" at 500 lux; the probit equation gives 1.2 %.
+- Reinhart (2004) Fig. 3(b): the printed formula is garbled; the reconstruction reproduces the plotted curve. Table 1 says the probability rises "from 0.5% to 2%"; formula and plot give 0.27 % to 1.97 %.
+- Hourly intermediate probability 1 − (1 − P₅)¹² assumes constant illuminance within the hour.
+- Breaks shorter than one hour are invisible at an hourly step, so the two shortest switch-off bins (< 30 min, 30–59 min) are never used.
+- Illuminance at a single sensor point stands in for the minimum work-plane illuminance.
+- Sanity reference: Reinhart (2004) Toronto south office, 10–39 kWh/m²·yr at 15 W/m², mean 27.2 (Eq. 1).
+- Result to keep (milestone 3): μ moves the user types in opposite directions. Higher μ means more short absences; Di users switch off only 39 % of the time for a 1–2 h absence, so their lights burn through more breaks (lit while absent rises with μ), while Dd users at a bright point gain more chances to switch off. Report results split by μ.
+- The stochastic mean depends strongly on the Dd/Di share, because the two user types form two separate groups in the distribution. Report the user types separately, not only the mean.
+- Deterministic case uses the Sveby working window with full occupancy (ASSUMPTION); lighting energy is on/off (no dimming): kWh/m²·yr = lit hours × LPD ÷ 1000.
+- Present the result as the four-step decomposition (waterfall): daylight, presence and behaviour effects, split by user type. Lead with the two user groups, not the overall mean.
+- Time: all files in standard time; office hours follow EU summer time (1 h earlier in standard time from the last Sunday of March to the last Sunday of October), as Reinhart (2004, section 3.1) did for occupancy.
+- Daylight input: simulated with Radiance for the Reinhart (2004) reference office in Malmö (section 9b), not measured. State the model set-up, the daylight-factor check (8.5 % at 1.5 m against Reinhart's 11 %, window as drawn in Fig. 5(a)), and what is not modelled (blinds, furniture, wall thickness).
 
 ## 11. Deliverables for sharing
 

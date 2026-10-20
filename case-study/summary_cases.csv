@@ -1,0 +1,15 @@
+case,mu_hourly,users,n,lit_hours_per_year_mean,kWh_m2_yr_mean_at_10W_m2,kWh_m2_yr_median,kWh_m2_yr_P10,kWh_m2_yr_P90,kWh_m2_yr_min_to_max
+1 fixed Sveby,,all,1,2349,23.490,,,,
+2 deterministic below 500 lx,,all,1,870,8.700,,,,
+3 ideal switching own presence,0.38,all,100,604.7,6.047,6.045,5.810,6.311,5.540 to 6.610
+4 stochastic,0.38,Dd,50,614.1,6.141,6.095,5.516,6.894,5.150 to 7.470
+4 stochastic,0.38,Di,50,1820.7,18.207,18.170,17.440,19.073,17.100 to 20.250
+4 stochastic,0.38,all,100,1217.4,12.174,12.285,5.640,18.697,5.150 to 20.250
+3 ideal switching own presence,0.67,all,100,604.6,6.046,6.050,5.849,6.290,5.660 to 6.510
+4 stochastic,0.67,Dd,50,589.0,5.890,5.855,5.288,6.484,4.680 to 7.500
+4 stochastic,0.67,Di,50,1902.8,19.028,18.975,18.350,19.780,17.820 to 20.470
+4 stochastic,0.67,all,100,1245.9,12.459,12.660,5.509,19.462,4.680 to 20.470
+3 ideal switching own presence,0.93,all,100,605.1,6.051,6.045,5.859,6.233,5.680 to 6.490
+4 stochastic,0.93,Dd,50,578.7,5.787,5.815,5.246,6.212,4.530 to 7.370
+4 stochastic,0.93,Di,50,1942.1,19.421,19.325,18.814,20.310,18.260 to 21.230
+4 stochastic,0.93,all,100,1260.4,12.604,12.815,5.420,19.721,4.530 to 21.230

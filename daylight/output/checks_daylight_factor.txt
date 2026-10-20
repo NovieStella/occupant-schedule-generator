@@ -1,0 +1,10 @@
+1. Glass: Radiance transmissivity 0.7846 (converted from VT 0.72); measured normal-incidence transmittance 0.7200
+2. Convergence, DF at 1.5 m:
+   -ab 6 -ad 65536 -lw 1.5e-5     8.557 %
+   -ab 8 -ad 65536 -lw 1.5e-5     8.546 %
+   -ab 10 -ad 131072 -lw 5e-6     8.562 %
+   -ab 12 -ad 131072 -lw 2e-6     8.576 %
+3. Window variants (explanation only):
+   as drawn in Fig. 5(a), 6 panes (4.58 m2)       DF 1.5 m 8.56 %, 4.5 m 1.37 %
+   no frames: two full-width bands (5.18 m2)      DF 1.5 m 9.51 %, 4.5 m 1.54 %
+   one frameless pane, sill to ceiling (5.86 m2)  DF 1.5 m 10.99 %, 4.5 m 1.77 %
